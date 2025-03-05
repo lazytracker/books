@@ -11,29 +11,7 @@ class BookController extends Controller
     public function index(Request $request)
     {
         try {
-            // Фиксированное соответствие предметов и их номеров
-            $subjectMapping = [
-                'Английский язык' => '00',
-                'Астрономия' => '01',
-                'Биология' => '02',
-                'География' => '03',
-                'ИЗО' => '04',
-                'Информатика' => '05',
-                'История' => '06',
-                'Литература' => '07',
-                'Математика' => '08',
-                'Музыка' => '09',
-                'Немецкий язык' => '10',
-                'ОБЖ' => '11',
-                'Обществознание' => '12',
-                'Окружающий мир' => '13',
-                'Русский язык' => '14',
-                'Технология' => '15',
-                'Физика' => '16',
-                'Физкультура' => '17',
-                'Французский язык' => '18',
-                'Химия' => '19'
-            ];
+            
 
             // Получаем список уникальных предметов с их ID
             $subjects = DB::table('books')
@@ -69,7 +47,7 @@ class BookController extends Controller
             \Log::info('SQL Query: ' . $query->toSql());
             \Log::info('SQL Bindings: ' . json_encode($query->getBindings()));
 
-            return view('books.index', compact('books', 'subjects', 'classesWithCount', 'subjectMapping'));
+            return view('books.index', compact('books', 'subjects', 'classesWithCount'));
 
         } catch (\Exception $e) {
             \Log::error('Error in BookController: ' . $e->getMessage());

@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CommandController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -44,6 +45,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 	
+});
+
+Route::middleware(['auth', 'checkAdmin'])->group(function () {
+    Route::get('/command', [CommandController::class, 'index']);
 });
 
 /*
