@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.customMargin{
+	margin-left:100px !important;
+}
+
+.customCard{
+	margin:10px;
+	padding:10px;
+	border:1px solid black;
+}
+
+
+.customCard tr,
+.customCard th,
+.customCard td {
+	padding:5px;
+	border:1px solid black;
+}
