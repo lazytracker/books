@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -56,6 +57,29 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Книга удалена из корзины');
     }
 	
+    public function order(Request $request){
+        //поместим заказ из корзины в заказы
+        // Получите элементы корзины для текущего пользователя
+		$cartItems = CartItem::with('book')
+        ->where('user_id', auth()->id())
+        ->get();
+
+        $orderNum = $cartItems[0]->id;
+        foreach ($cartItems as $cartItem) {
+            // Create a new order
+            Order::create([
+                'userid' => auth()->id(), // Assuming you want to associate the order with the current user
+                'productid' => $cartItem->book->id, // Assuming 'book' is the relationship and you want to use the book's ID
+                'ordernum' => $orderNum,
+                'quantity' => $cartItem->quantity, // Assuming you have a quantity field in the cart item
+                'year' => '2025', // You can set the current year or any other logic
+                'status' => 'в обработке', // Set the initial status of the order
+            ]);
+        }
+
+        return redirect()->route('order.index')->with('success', 'Orders created successfully.');
+    }
+
 	public function download(Request $request)
 	{
 		// Получите элементы корзины для текущего пользователя

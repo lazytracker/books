@@ -49,7 +49,7 @@
                             </tbody>
                         </table>
 						 <!-- Кнопка для загрузки текстового файла -->
-                    <form action="{{ route('cart.download') }}" method="POST" class="mt-4">
+                    <form action="{{ route('cart.order') }}" method="POST" class="mt-4">
                         @csrf
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Оформить заказ</button>
                     </form>

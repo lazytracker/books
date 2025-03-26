@@ -35,7 +35,7 @@ Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show')
 Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-    
+    Route::post('/cart/order', [CartController::class, 'order'])->name('cart.order');
 	Route::post('/cart/download', [CartController::class, 'download'])->name('cart.download');
 	Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
 });

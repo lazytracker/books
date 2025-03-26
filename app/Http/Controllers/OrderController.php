@@ -14,9 +14,6 @@ class OrderController extends Controller
             ->get();
 
         return view('orders.index', compact('orderItems'));
-
-        //$orders = Order::all();
-        //return view('orders.index', compact('orders'));
         
     }
 
