@@ -24,12 +24,12 @@
                         <x-nav-link :href="route('cart.index')" :active="request()->routeIs('cart.index')">
                             {{ __('Корзина') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('cart.index')" :active="request()->routeIs('cart.index')">
+                        <x-nav-link :href="route('order.index')" :active="request()->routeIs('order.index')">
                             {{ __('Заказы') }}
                         </x-nav-link>
                         @if (Auth::user()->role === 'admin')
                         <x-nav-link :href="route('command.index')" :active="request()->routeIs('command.index')">
-                            {{ __('Заказы') }}
+                            {{ __('Все заказы') }}
                         </x-nav-link>
                         @endif
                     @endauth

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CommandController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -37,6 +38,15 @@ Route::middleware('auth')->group(function () {
     
 	Route::post('/cart/download', [CartController::class, 'download'])->name('cart.download');
 	Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+});
+
+// Маршруты для заказов
+Route::middleware('auth')->group(function () {
+    Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+    Route::post('/order/add', [OrderController::class, 'add'])->name('order.add');
+    
+	Route::post('/order/download', [OrderController::class, 'download'])->name('order.download');
+	Route::delete('/order/remove', [OrderController::class, 'remove'])->name('order.remove');
 });
 
 // Остальные маршруты для аутентификации

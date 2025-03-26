@@ -25,4 +25,10 @@ class Book extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+
+    // Define the relationship with the Order model
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'productid'); // Assuming 'productid' is the foreign key
+    }
 } 
