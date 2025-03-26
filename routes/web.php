@@ -47,8 +47,13 @@ Route::middleware('auth')->group(function () {
 	
 });
 
+/*
 Route::middleware(['auth', 'checkAdmin'])->group(function () {
     Route::get('/command', [CommandController::class, 'index']);
+});
+*/
+Route::middleware(['auth', 'checkAdmin'])->group(function () {
+    Route::get('/command', [CommandController::class, 'index'])->name('command.index');
 });
 
 /*

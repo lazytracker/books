@@ -29,7 +29,12 @@
                                             <div class="text-sm text-gray-900">{{ $item->book->author }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $item->quantity }}
+                                        <form action="" method="POST" class="inline">
+                                        @csrf
+                                        <input type="text" id="" name="" value="{{ $item->quantity }}" class="border border-gray-400 rounded" style="width:100px; text-align:center;">
+                                            
+                                        <!--<button type="submit" class="text-blue-600 hover:text-blue-900">Применить</button>-->
+                                        </form>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <form action="{{ route('cart.remove') }}" method="POST" class="inline">
@@ -46,7 +51,7 @@
 						 <!-- Кнопка для загрузки текстового файла -->
                     <form action="{{ route('cart.download') }}" method="POST" class="mt-4">
                         @csrf
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Скачать список покупок</button>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Оформить заказ</button>
                     </form>
                     @else
                         <p>Корзина пуста</p>

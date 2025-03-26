@@ -5,10 +5,9 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-    <a href="/">
-        <!-- Логотип заменен на обычное изображение -->
-        <img src="{{ asset('images/logo.png') }}" alt="Логотип" class="block h-9 w-auto">
-    </a>
+                    <a href="{{ route('home') }}">
+                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    </a>
                 </div>
 
                 <!-- Navigation Links -->
@@ -16,7 +15,6 @@
                     <x-nav-link :href="route('books.index')" :active="request()->routeIs('books.index')">
                         {{ __('Учебники') }}
                     </x-nav-link>
-                    
                     @auth
                        <!-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
@@ -24,16 +22,7 @@
                         <x-nav-link :href="route('cart.index')" :active="request()->routeIs('cart.index')">
                             {{ __('Корзина') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('cart.index')" :active="request()->routeIs('cart.index')">
-                            {{ __('Заказы') }}
-                        </x-nav-link>
-                        @if (Auth::user()->role === 'admin')
-                        <x-nav-link :href="route('command.index')" :active="request()->routeIs('command.index')">
-                            {{ __('Заказы') }}
-                        </x-nav-link>
-                        @endif
                     @endauth
-               
                 </div>
             </div>
 
@@ -73,7 +62,6 @@
                 </div>
             @else
                 <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-4">
-                    
                     <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Войти</a>
                     <a href="{{ route('register') }}" class="text-sm text-gray-700 underline">Регистрация</a>
                 </div>
@@ -97,7 +85,6 @@
             <x-responsive-nav-link :href="route('books.index')" :active="request()->routeIs('books.index')">
                 {{ __('Учебники') }}
             </x-responsive-nav-link>
-            
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     {{ __('Dashboard') }}

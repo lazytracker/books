@@ -1,15 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-    <div class="flex justify-between items-center">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Учебники') }}
         </h2>
         <div class="flex items-center space-x-2">
-            <input type="text" placeholder="Искать..." class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-            <button class="bg-blue-500 text-white rounded-lg p-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" style="margin-left:10px; width:45px;">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
+        <input type="text" placeholder="Search..." class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        <button class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Search
+        </button>
     </div>
     </x-slot>
     <div class="py-12">
@@ -74,28 +72,23 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th></th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Автор</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Класс</th>
-											
+											<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">№</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
                                         @foreach($books as $book)
                                             <tr>
-                                                
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 @if(!is_null($book->url_id))
                                                     <img src="https://books.rusneb.ru/book/getimage/cover?docid={{ $book->url_id }}" style="width:70px;" alt="обложка">
                                                 @else
                                                     <img src="/img/bookcover.png" style="width:70px;">
                                                 @endif    
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                   <b> {{ $book->year }} </b>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <form action="{{ route('cart.add') }}" method="POST" class="inline-flex items-center">
@@ -123,7 +116,9 @@
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {{ $book->class }}
                                                 </td>
-												
+												<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ $book->year }}
+                                                </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {{ $book->seqNum }}
                                                 </td>

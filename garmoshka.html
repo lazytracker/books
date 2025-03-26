@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История России 10 класс</title>
+    <style>
+        /* Стили для кнопок */
+        .gray-button {
+            background-color: lightgray;
+            color: black;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .blue-button {
+            background-color: blue;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .green-button {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .red-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .input-field {
+            width: 60px; /* Ширина для 6 символов */
+            text-align: center;
+        }
+
+        /* Стили для раскрывающегося блока */
+        .folder {
+            margin-left: 20px;
+        }
+        .folder-title {
+            cursor: pointer;
+        }
+        .folder-title::before {
+            content: "+ ";
+            font-weight: bold;
+        }
+        .folder.open .folder-title::before {
+            content: "- ";
+        }
+        .subfolder {
+            margin-left: 20px;
+            display: none;
+        }
+        .subfolder::before {
+            content: "├── ";
+        }
+        .subfolder:last-child::before {
+            content: "└── ";
+        }
+        .open .subfolder {
+            display: block;
+        }
+
+        /* Стили для выпадающего меню */
+        select {
+            padding: 3px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="folder">
+        <div class="folder-title" onclick="toggleFolder(this)">
+            История России 10 класс
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <span>2020</span>
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <span>2021</span>
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <span>2022</span>
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <span>2023</span>
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <span>2024</span>
+        </div>
+        <div class="subfolder">
+            <button class="gray-button" onclick="handleFirstButtonClick(this)">В корзину</button>
+            <button class="gray-button" onclick="handleSecondButtonClick(this)">Убрать</button>
+            <input type="number" class="input-field" maxlength="6" oninput="updateFirstButton(this)">
+            <select onchange="updateYear(this)">
+                <option value="">Выберите год</option>
+                <!-- Годы от 1980 до 2025 -->
+                <script>
+                    for (let year = 1980; year <= 2025; year++) {
+                        document.write(`<option value="${year}">${year}</option>`);
+                    }
+                </script>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        // Функция для раскрытия/сворачивания блока
+        function toggleFolder(title) {
+            const folder = title.parentElement;
+            folder.classList.toggle("open");
+        }
+
+        // Функция для обновления первой кнопки при вводе цифр
+        function updateFirstButton(input) {
+            const firstButton = input.parentElement.querySelector('button:nth-child(1)');
+            if (input.value.trim() !== "") {
+                firstButton.classList.remove("gray-button");
+                firstButton.classList.add("blue-button");
+            } else {
+                firstButton.classList.remove("blue-button");
+                firstButton.classList.add("gray-button");
+            }
+        }
+
+        // Функция для обработки клика по первой кнопке
+        function handleFirstButtonClick(button) {
+            const input = button.parentElement.querySelector('.input-field');
+            const secondButton = button.parentElement.querySelector('button:nth-child(2)');
+
+            if (input.value.trim() !== "") {
+                button.textContent = "В корзине";
+                button.classList.remove("blue-button");
+                button.classList.add("green-button");
+
+                secondButton.classList.remove("gray-button");
+                secondButton.classList.add("red-button");
+            }
+        }
+
+        // Функция для обработки клика по второй кнопке
+        function handleSecondButtonClick(button) {
+            const input = button.parentElement.querySelector('.input-field');
+            const firstButton = button.parentElement.querySelector('button:nth-child(1)');
+
+            input.value = ""; // Очищаем поле ввода
+            firstButton.textContent = "В корзину";
+            firstButton.classList.remove("green-button", "blue-button");
+            firstButton.classList.add("gray-button");
+
+            button.classList.remove("red-button");
+            button.classList.add("gray-button");
+        }
+
+        // Функция для обновления выбранного года
+        function updateYear(select) {
+            const selectedYear = select.value;
+            if (selectedYear) {
+                select.parentElement.querySelector('span').textContent = selectedYear;
+            }
+        }
+    </script>
+</body>
+</html>
