@@ -73,7 +73,7 @@
                                 <table class="w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th></th>
+                                            <th style="min-width:110px;"></th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
@@ -87,15 +87,21 @@
                                         @foreach($books as $book)
                                             <tr>
                                                 
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 w-20" style="width: 70px; height: 70px;">
                                                 @if(!is_null($book->url_id))
                                                     <img src="https://books.rusneb.ru/book/getimage/cover?docid={{ $book->url_id }}" style="width:70px;" alt="обложка">
                                                 @else
-                                                    <img src="/img/bookcover.png" style="width:70px;">
+                                                    <img src="/img/bookcover.png" class="w-16 h-16 object-cover">
                                                 @endif    
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                   <b> {{ $book->year }} </b>
+                                                    <select id="years" name="years">
+                                                        <option value="2025">2025</option>
+                                                        <option value="2024">2024</option>
+                                                        <option value="2023">2023</option>
+                                                        <option value="2022">2022</option>
+                                                        <option value="2021">2021</option>
+                                                    </select>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <form action="{{ route('cart.add') }}" method="POST" class="inline-flex items-center">

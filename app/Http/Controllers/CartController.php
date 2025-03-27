@@ -77,6 +77,7 @@ class CartController extends Controller
             ]);
         }
 
+        CartItem::where('user_id', auth()->id())->delete();//или можно менять их статус в корзине
         return redirect()->route('order.index')->with('success', 'Orders created successfully.');
     }
 
