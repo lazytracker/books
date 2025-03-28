@@ -20,7 +20,7 @@ class BookController extends Controller
                 ->orderBy('subj_hex')
                 ->get();
 
-                
+            
 
             // Базовый запрос для фильтрации
             $query = DB::table('books');
