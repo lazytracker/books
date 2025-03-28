@@ -24,10 +24,13 @@ class CartController extends Controller
 
     public function add(Request $request)
     {
+       
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
             'quantity' => 'required|integer|min:1'
         ]);
+
+
 
         $cartItem = CartItem::where('user_id', auth()->id())
             ->where('product_id', $validated['book_id'])

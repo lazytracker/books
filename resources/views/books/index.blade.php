@@ -74,8 +74,8 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th style="min-width:110px;"></th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
+                                            
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspКол-во</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Автор</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Класс</th>
@@ -94,18 +94,17 @@
                                                     <img src="/img/bookcover.png" class="w-16 h-16 object-cover">
                                                 @endif    
                                                 </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    <select id="years" name="years">
-                                                        <option value="2025">2025</option>
-                                                        <option value="2024">2024</option>
-                                                        <option value="2023">2023</option>
-                                                        <option value="2022">2022</option>
-                                                        <option value="2021">2021</option>
-                                                    </select>
-                                                </td>
+                                                
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <form action="{{ route('cart.add') }}" method="POST" class="inline-flex items-center">
                                                         @csrf
+                                                        <select id="years" name="years" class="w-20 mr-2 border rounded px-2 py-1 pr-8">
+                                                            <option value="2025">2025</option>
+                                                            <option value="2024">2024</option>
+                                                            <option value="2023">2023</option>
+                                                            <option value="2022">2022</option>
+                                                            <option value="2021">2021</option>
+                                                        </select>
                                                         <input type="hidden" name="book_id" value="{{ $book->id }}">
                                                         <input type="number" name="quantity" value="1" min="1" 
                                                             class="w-16 mr-2 border rounded px-2 py-1">
