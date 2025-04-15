@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
 // Маршруты для заказов
 Route::middleware('auth')->group(function () {
     Route::get('/order', [OrderController::class, 'index'])->name('order.index');
+    Route::get('/ordered', [OrderController::class, 'ordered'])->name('order.ordered');
     Route::post('/order/add', [OrderController::class, 'add'])->name('order.add');
     
 	Route::post('/order/download', [OrderController::class, 'download'])->name('order.download');

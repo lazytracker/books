@@ -24,12 +24,16 @@ class CartController extends Controller
 
     public function add(Request $request)
     {
+       
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
+            'years' => 'required|integer|min:1'
         ]);
 
-        $cartItem = CartItem::where('user_id', auth()->id())
+
+
+     /*   $cartItem = CartItem::where('user_id', auth()->id())
             ->where('product_id', $validated['book_id'])
             ->first();
 
@@ -39,9 +43,17 @@ class CartController extends Controller
             CartItem::create([
                 'user_id' => auth()->id(),
                 'product_id' => $validated['book_id'],
-                'quantity' => $validated['quantity']
+                'quantity' => $validated['quantity'],
+                'year' => $validated['years']
             ]);
-        }
+        }*/
+
+        CartItem::create([
+            'user_id' => auth()->id(),
+            'product_id' => $validated['book_id'],
+            'quantity' => $validated['quantity'],
+            'year' => $validated['years']
+        ]);
 
         return redirect()->back()->with('success', 'Книга добавлена в корзину');
     }
@@ -72,7 +84,7 @@ class CartController extends Controller
                 'productid' => $cartItem->book->id, // Assuming 'book' is the relationship and you want to use the book's ID
                 'ordernum' => $orderNum,
                 'quantity' => $cartItem->quantity, // Assuming you have a quantity field in the cart item
-                'year' => '2025', // You can set the current year or any other logic
+                'year' => $cartItem->year, // You can set the current year or any other logic
                 'status' => 'в обработке', // Set the initial status of the order
             ]);
         }

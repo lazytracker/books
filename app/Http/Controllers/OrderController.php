@@ -27,7 +27,8 @@ class OrderController extends Controller
         // Logic to add the order
         // For example, you might save the order to the database
         // Order::create($validatedData);
-        return redirect()->route('order.index')->with('success', 'Order added successfully.');
+       // return redirect()->route('order.index')->with('success', 'Order added successfully.');
+       return redirect()->route('order.ordered');
     }
 
     public function download(Request $request)
@@ -52,5 +53,10 @@ class OrderController extends Controller
          // Order::destroy($validatedData['order_id']);
  
          return response()->json(['message' => 'Order removed successfully.']);
+     }
+
+     public function ordered()
+     {
+        return redirect()->route('order.ordered');
      }
 }
