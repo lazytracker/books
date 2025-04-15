@@ -29,6 +29,7 @@ Route::get('/dashboard', function () {
 
 // Маршруты для книг
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
+Route::get('/search', [BookController::class, 'search'])->name('books.search');
 Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 
 // Маршруты для корзины

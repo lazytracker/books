@@ -59,4 +59,15 @@ class BookController extends Controller
     {
         return view('books.show', compact('book'));
     }
+
+    public function search(Request $request)
+    {
+        $searchTerm = $request->input('query');
+    
+        $results = DB::table('books')
+                     ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
+                     ->get();
+    
+        return view('books.searchresult', compact('results'));
+    }
 } 
