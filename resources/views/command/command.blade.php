@@ -39,6 +39,13 @@
 				</div>
             @endforeach
         @endif
+
+<?php 
+foreach($groupedCartItems as $userId => $cartItems){
+    echo $cartItems[0]->ordernum . "<br>";
+}
+
+?>
     </div>
 	</div>
 </x-app-layout>
