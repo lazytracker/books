@@ -24,11 +24,11 @@ class CartController extends Controller
 
     public function add(Request $request)
     {
-       
+        
         $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
             'quantity' => 'required|integer|min:1',
-            'years' => 'required|integer|min:1'
+           
         ]);
 
 
@@ -51,8 +51,8 @@ class CartController extends Controller
         CartItem::create([
             'user_id' => auth()->id(),
             'product_id' => $validated['book_id'],
-            'quantity' => $validated['quantity'],
-            'year' => $validated['years']
+            'quantity' => $validated['quantity']
+           
         ]);
 
         return redirect()->back()->with('success', 'Книга добавлена в корзину');
@@ -84,7 +84,7 @@ class CartController extends Controller
                 'productid' => $cartItem->book->id, // Assuming 'book' is the relationship and you want to use the book's ID
                 'ordernum' => $orderNum,
                 'quantity' => $cartItem->quantity, // Assuming you have a quantity field in the cart item
-                'year' => $cartItem->year, // You can set the current year or any other logic
+               
                 'status' => 'в обработке', // Set the initial status of the order
             ]);
         }
