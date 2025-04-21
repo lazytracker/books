@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/order/add', [OrderController::class, 'add'])->name('order.add');
     
 	Route::post('/order/download', [OrderController::class, 'download'])->name('order.download');
+    Route::get('/orderdownld/{userId}/{orderNum}', [OrderController::class, 'downloadOrder'])->name('order.download');
 	Route::delete('/order/remove', [OrderController::class, 'remove'])->name('order.remove');
 });
 

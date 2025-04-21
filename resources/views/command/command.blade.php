@@ -16,14 +16,6 @@
             @else
 
            
-            <?php
-            $x = 0;
-            foreach($groupedCartItems as $userId => $group){
-                $x++;
-                echo "<h2>" . $group['user']->name . "</h2><br>";
-            }
-            echo "<b>".$x."</b>";
-            ?>
                 @foreach($groupedCartItems as $userId => $group)
                     <div class="customCard w-1/2 m-3 p-4 border rounded shadow">
                         <h2 class="font-bold">{{ $group['user']->name }}</h2> <!-- Display the user's name -->
@@ -46,9 +38,11 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                            <button class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
+                            <div class="mt-4 mb-4">
+                            <a href="{{ route('order.download', [$userId, $orderNum]) }}" class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
                                 Скачать
-                            </button>
+                            </a>
+                            </div>
                         @endforeach
                     </div>
                 @endforeach
