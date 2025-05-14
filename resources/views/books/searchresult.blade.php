@@ -61,6 +61,7 @@
                                                         @if(!is_null($book->url_id))
                                                             <div class="relative">
                                                                 <!-- Картинка обложки -->
+                                                                <a href="https://books.rusneb.ru/book/ru/nbr?book={{ $book->url_id }}" target="_blank">
                                                                 <img src="{{ asset('images/thumbs/thumbs_' . $book->url_id . '.jpg') }}" 
                                                                     style="width:70px;" alt="обложка" 
                                                                     data-book-id="{{ $book->url_id }}" 

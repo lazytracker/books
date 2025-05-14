@@ -91,6 +91,7 @@
                                     <td class="px-6 py-4 text-sm text-gray-500" style="min-width: 70px; width: 70px; max-width: 70px;">
                                         @if(!is_null($book->url_id))
                                             <div class="relative">
+                                                <a href="https://books.rusneb.ru/book/ru/nbr?book={{ $book->url_id }}" target="_blank">
                                                 <!-- Картинка обложки -->
                                                 <img src="{{ asset('images/thumbs/thumbs_' . $book->url_id . '.jpg') }}" 
                                                     style="width:70px;" alt="обложка" 
