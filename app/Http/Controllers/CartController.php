@@ -7,7 +7,26 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
-{
+{   
+    public function updateQuantity(Request $request)
+    {
+    $validated = $request->validate([
+        'product_id' => 'required|exists:books,id',
+        'quantity' => 'required|integer|min:1',
+    ]);
+
+    // Найти товар в корзине и обновить его количество
+    $cartItem = CartItem::where('user_id', auth()->id())
+        ->where('product_id', $validated['product_id'])
+        ->first();
+
+    if ($cartItem) {
+        $cartItem->quantity = $validated['quantity'];
+        $cartItem->save();
+    }
+
+    return redirect()->route('cart.index')->with('success', 'Количество товара обновлено');
+    }
     public function __construct()
     {
         $this->middleware('auth');

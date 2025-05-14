@@ -12,12 +12,12 @@ class BookController extends Controller
     {
         try {
             
-
+            
             // Получаем список уникальных предметов с их ID
             $subjects = DB::table('books')
                 ->select('subj', 'subj_hex')
                 ->distinct()
-                ->orderBy('subj_hex')
+                ->orderBy('subj')
                 ->get();
 
             // Базовый запрос для фильтрации
@@ -64,10 +64,27 @@ class BookController extends Controller
     {
         $searchTerm = $request->input('query');
     
-        $results = DB::table('books')
-                     ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
-                     ->get();
+        // Удаляем все тире из запроса
+        $searchTerm = str_replace('-', '', $searchTerm);
     
+        // Поиск по caption и author с использованием MATCH
+$normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
+
+$normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
+
+$results = DB::table('books')
+    ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
+
+    // Поиск по любому разделённому значению ISBN с учётом пробела и дефисов
+    ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
+
+    // Поиск по ART
+    ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+    ->get();
+
+        
         return view('books.searchresult', compact('results'));
     }
+    
+    
 } 

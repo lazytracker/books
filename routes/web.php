@@ -7,6 +7,10 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\SearchController;
+
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::post('/cart/updateQuantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
 
 /*
 |--------------------------------------------------------------------------
