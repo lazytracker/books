@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {   
-    public function updateQuantity(Request $request)
-    {
+public function updateQuantity(Request $request)
+{
     $validated = $request->validate([
         'product_id' => 'required|exists:books,id',
         'quantity' => 'required|integer|min:1',
@@ -25,8 +25,9 @@ class CartController extends Controller
         $cartItem->save();
     }
 
-    return redirect()->route('cart.index')->with('success', 'Количество товара обновлено');
-    }
+    // Возвращаем JSON-ответ для AJAX запроса
+    return response()->json(['success' => true, 'message' => 'Количество товара обновлено']);
+}
     public function __construct()
     {
         $this->middleware('auth');
@@ -41,52 +42,44 @@ class CartController extends Controller
         return view('cart.index', compact('cartItems'));
     }
 
-    public function add(Request $request)
-    {
-        
-        $validated = $request->validate([
-            'book_id' => 'required|exists:books,id',
-            'quantity' => 'required|integer|min:1',
-           
-        ]);
+public function add(Request $request)
+{
+    $validated = $request->validate([
+        'book_id' => 'required|exists:books,id',
+        'quantity' => 'required|integer|min:1',
+    ]);
 
+    // Проверяем, есть ли уже этот товар в корзине
+    $cartItem = CartItem::where('user_id', auth()->id())
+        ->where('product_id', $validated['book_id'])
+        ->first();
 
-
-     /*   $cartItem = CartItem::where('user_id', auth()->id())
-            ->where('product_id', $validated['book_id'])
-            ->first();
-
-        if ($cartItem) {
-            $cartItem->update(['quantity' => $validated['quantity']]);
-        } else {
-            CartItem::create([
-                'user_id' => auth()->id(),
-                'product_id' => $validated['book_id'],
-                'quantity' => $validated['quantity'],
-                'year' => $validated['years']
-            ]);
-        }*/
-
+    if ($cartItem) {
+        // Если товар уже есть в корзине, увеличиваем количество
+        $cartItem->quantity += $validated['quantity'];
+        $cartItem->save();
+    } else {
+        // Если товара нет в корзине, создаем новую запись
         CartItem::create([
             'user_id' => auth()->id(),
             'product_id' => $validated['book_id'],
             'quantity' => $validated['quantity']
-           
         ]);
-
-        return redirect()->back()->with('success', 'Книга добавлена в корзину');
     }
 
-    public function remove(Request $request)
-    {
-        
-		
-		CartItem::where('user_id', auth()->id())
-            ->where('product_id', $request->book_id)
-            ->delete();
+    return redirect()->back()->with('success', 'Книга добавлена в корзину');
+}
 
-        return redirect()->back()->with('success', 'Книга удалена из корзины');
-    }
+
+public function remove(Request $request)
+{
+    CartItem::where('user_id', auth()->id())
+        ->where('product_id', $request->book_id)
+        ->delete();
+
+    // Возвращаем JSON-ответ для AJAX запроса
+    return response()->json(['success' => true, 'message' => 'Книга удалена из корзины']);
+}
 	
     public function order(Request $request){
         //поместим заказ из корзины в заказы
