@@ -117,10 +117,19 @@
 <form action="{{ route('cart.add') }}" method="POST" class="inline-flex items-center">
     @csrf
     <input type="hidden" name="book_id" value="{{ $book->id }}">
-    <input type="number" name="quantity" value="{{ isset($cartItems[$book->id]) ? $cartItems[$book->id] : 1 }}" min="1" class="w-16 mr-2 border rounded px-2 py-1">
+    <input 
+        type="number" 
+        name="quantity" 
+        value="{{ isset($cartItems[$book->id]) && $cartItems[$book->id] > 0 ? $cartItems[$book->id] : 1 }}" 
+        min="0" 
+        class="quantity-input w-16 mr-2 border rounded px-2 py-1"
+        data-product-id="{{ $book->id }}"
+    >
 
+
+<div id="cart-button-{{ $book->id }}">
     @if(isset($cartItems[$book->id]))
-        <!-- Зеленая кнопка, редирект -->
+        <!-- Зеленая кнопка -->
         <button 
             type="button" 
             onclick="window.location.href='{{ route('cart.index') }}'" 
@@ -131,7 +140,7 @@
             <span class="text-sm select-none">Перейти</span>
         </button>
     @else
-        <!-- Синяя кнопка, сабмит -->
+        <!-- Синяя кнопка -->
         <button 
             type="submit" 
             class="text-white py-2 px-4 rounded flex flex-col items-center justify-center"
@@ -140,6 +149,8 @@
             <span class="font-bold select-none">В корзину</span>
         </button>
     @endif
+</div>
+
 </form>
 
 </td>
@@ -229,7 +240,98 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработка изменения количества
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const productId = this.dataset.productId;
+            const quantity = parseInt(this.value);
+            
+            if (quantity <= 0) {
+                // Если количество 0 или меньше, удаляем товар
+                removeCartItem(productId);
+            } else {
+                // Иначе обновляем количество
+                updateCartItemQuantity(productId, quantity);
+            }
+        });
+    });
+    
+    // Обработка кнопки удаления
+    const removeButtons = document.querySelectorAll('.remove-item');
+    
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            removeCartItem(productId);
+        });
+    });
+    
+    // Функция для обновления количества товара
+    function updateCartItemQuantity(productId, quantity) {
+        // Создаем форму для отправки
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', quantity);
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        // Отправляем AJAX запрос
+        fetch('{{ route('cart.updateQuantity') }}', {
+            method: 'POST',
+            body: formData
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    // Функция для удаления товара
+function removeCartItem(productId) {
+    const formData = new FormData();
+    formData.append('book_id', productId);
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('_method', 'DELETE');
 
+    fetch('{{ route('cart.remove') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Удаляем строку (если есть таблица корзины)
+        const row = document.getElementById('cart-item-' + productId);
+        if (row) row.remove();
+
+        // Проверка: если на главной, меняем кнопку обратно на синюю
+        const cartButtonContainer = document.getElementById('cart-button-' + productId);
+        if (cartButtonContainer) {
+            cartButtonContainer.innerHTML = `
+                <button 
+                    type="submit" 
+                    class="text-white py-2 px-4 rounded flex flex-col items-center justify-center"
+                    style="min-width: 80px; min-height: 60px; background-color:#3b82f6;"
+                >
+                    <span class="font-bold select-none">В корзину</span>
+                </button>
+            `;
+        }
+
+        // Если корзина пуста — обновляем страницу
+        if (document.querySelectorAll('tbody tr').length === 0) {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при удалении товара');
+    });
+}
+
+});
+</script>
 
 
 </x-app-layout> 
