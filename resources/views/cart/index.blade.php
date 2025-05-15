@@ -41,7 +41,8 @@
                 </div>
             </td>
             <td class="px-4 py-3 text-sm text-gray-500">
-                <input 
+                <input
+                    style="width: 8ch;" 
                     type="number" 
                     name="quantity" 
                     value="{{ $item->quantity }}"

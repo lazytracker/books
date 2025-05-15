@@ -118,6 +118,7 @@
     @csrf
     <input type="hidden" name="book_id" value="{{ $book->id }}">
     <input 
+        style="width: 7ch;"
         type="number" 
         name="quantity" 
         value="{{ isset($cartItems[$book->id]) && $cartItems[$book->id] > 0 ? $cartItems[$book->id] : 1 }}" 
