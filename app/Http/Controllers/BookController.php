@@ -63,31 +63,28 @@ class BookController extends Controller
         return view('books.show', compact('book'));
     }
 
-    public function search(Request $request)
-    {
-        $searchTerm = $request->input('query');
-    
-        // Удаляем все тире из запроса
-        $searchTerm = str_replace('-', '', $searchTerm);
-    
-        // Поиск по caption и author с использованием MATCH
-$normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
+public function search(Request $request)
+{
+    $searchTerm = $request->input('query');
+    $searchTerm = str_replace('-', '', $searchTerm);
+    $normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
 
-$normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
+    $results = DB::table('books')
+        ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
+        ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
+        ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+        ->get();
 
-$results = DB::table('books')
-    ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
-
-    // Поиск по любому разделённому значению ISBN с учётом пробела и дефисов
-    ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
-
-    // Поиск по ART
-    ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-    ->get();
-
-        
-        return view('books.searchresult', compact('results'));
+    // Получаем ID книг, которые уже в корзине пользователя (как в index)
+    $cartItems = [];
+    if (auth()->check()) {
+        $cartItems = CartItem::where('user_id', auth()->id())
+            ->pluck('quantity', 'product_id')
+            ->toArray();
     }
+
+    return view('books.searchresult', compact('results', 'cartItems')); // Теперь передаем и cartItems
+}
     
     
 } 

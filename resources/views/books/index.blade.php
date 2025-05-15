@@ -123,7 +123,7 @@
         <!-- Зеленая кнопка, редирект -->
         <button 
             type="button" 
-            onclick="window.location.href='http://127.0.0.1:8000/cart'" 
+            onclick="window.location.href='{{ route('cart.index') }}'" 
             class="text-white py-2 px-4 rounded flex flex-col items-center justify-center"
             style="min-width: 80px; min-height: 60px; background-color:#22c55e;"
         >
