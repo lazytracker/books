@@ -28,6 +28,8 @@ Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 
     ->name('admin.order.toggleVerification');
 
     Route::delete('/cart/delete', [CartController::class, 'deleteByOrderNum'])->name('cart.delete');
+Route::post('/admin/order/toggle-status/{userId}/{orderNum}', [CommandController::class, 'toggleStatus'])
+    ->name('admin.order.toggleStatus');
 
 
 Route::get('/', [BookController::class, 'index'])->name('home');

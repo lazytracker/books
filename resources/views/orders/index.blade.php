@@ -75,15 +75,26 @@
     </form>
 
     <!-- Правая часть: кнопка удаления -->
-    <form action="{{ route('cart.delete') }}" method="POST" style="margin: 0;">
-        @csrf
-        @method('DELETE')
-        <input type="hidden" name="orderNum" value="{{ $orderNum }}">
+<form action="{{ route('cart.delete') }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="orderNum" value="{{ $orderNum }}">
+    
+    @if($items->first()->is_verified)
         <button type="submit" onclick="return confirm('Удалить весь заказ №{{ $orderNum }}?')"
             style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
             Удалить заказ
         </button>
-    </form>
+    @else
+        <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
+            Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 8 812 678-97-27
+        </span>
+        <button type="button" disabled
+            style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
+            Удалить заказ
+        </button>
+    @endif
+</form>
 </div>
 
                         </div>

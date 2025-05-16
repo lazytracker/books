@@ -40,6 +40,51 @@
                     <a href="{{ route('order.download', [$userId, $orderNum]) }}" class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
                         Скачать
                     </a>
+@if ($cartItems->first()->is_verified)
+    {{-- Плашка "Заказ готов" --}}
+    <div
+        style="
+            margin: 12px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            color: white;
+            background-color:rgb(15, 63, 33); /* тёмно-зелёный (green-800) */
+            border: none;
+            cursor: default;
+            text-align: center;
+            display: inline-block;
+            width: 190px; /* примерно ширина кнопки */
+            user-select: none;
+        "
+    >
+        Заказ готов
+    </div>
+@else
+    {{-- Кнопка переключения статуса --}}
+    <form method="POST" action="{{ route('admin.order.toggleStatus', [$userId, $orderNum]) }}">
+        @csrf
+        <button type="submit"
+            style="
+                margin: 12px;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-weight: 600;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                color: white;
+                background-color: {{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }};
+                border: none;
+                cursor: pointer;
+                width: 190px;
+            "
+            onmouseover="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#b91c1c' : '#1d4ed8' }}'"
+            onmouseout="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}'"
+        >
+            {{ $cartItems->first()->status === 'Принят в работу' ? 'Убрать из работы' : 'Принять в работу' }}
+        </button>
+    </form>
+@endif
 
                     <form method="POST" action="{{ route('admin.order.toggleVerification', [$userId, $orderNum]) }}">
                         @csrf
@@ -56,6 +101,7 @@
             background-color: {{ $cartItems->first()->is_verified ? '#dc2626' /* red-600 */ : '#16a34a' /* green-600 */ }};
             border: none;
             cursor: pointer;
+            width: 190px;
         "
         onmouseover="this.style.backgroundColor='{{ $cartItems->first()->is_verified ? '#b91c1c' /* red-700 */ : '#15803d' /* green-700 */ }}'"
         onmouseout="this.style.backgroundColor='{{ $cartItems->first()->is_verified ? '#dc2626' : '#16a34a' }}'">
