@@ -26,6 +26,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Автор</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                                     </tr>
                                 </thead>
@@ -44,6 +45,9 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">                                        
                                                 {{ $item->quantity }}                                                                                    
                                             </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">                                        
+                                                {{ $item->price ? number_format($item->price, 2) : '-' }}                                                                                    
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 {{ $item->status }}
                                             </td>
@@ -54,6 +58,7 @@
                              <!-- Кнопка для загрузки текстового файла -->
                         <form action="{{ route('cart.download') }}" method="POST" class="mt-4">
                             @csrf
+                            <input type="hidden" name="orderNum" value="{{ $orderNum }}">
                             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Скачать marc-записи</button>
                         </form>
                         </div>

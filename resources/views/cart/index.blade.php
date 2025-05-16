@@ -19,10 +19,11 @@
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Автор</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Год</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Количество</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                                     </tr>
                                 </thead>
-                               <tbody class="bg-white divide-y divide-gray-200">
+<tbody class="bg-white divide-y divide-gray-200">
     @foreach($cartItems as $item)
         <tr id="cart-item-{{ $item->product_id }}">
             <td class="px-4 py-3">
@@ -51,6 +52,18 @@
                     min="0"
                 >
             </td>
+            <td class="px-4 py-3 text-sm text-gray-500">
+                <input
+                    style="width: 10ch;" 
+                    type="number" 
+                    name="price" 
+                    value="{{ $item->price }}"
+                    step="0.01" 
+                    placeholder="Цена"
+                    class="price-input border border-gray-400 rounded mx-1 w-20 text-center"
+                    data-product-id="{{ $item->product_id }}" 
+                >
+            </td>
             <td class="px-4 py-3 text-sm font-medium">
                 <button 
                     type="button" 
@@ -77,83 +90,8 @@
             </div>
         </div>
     </div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Обработка изменения количества
-    const quantityInputs = document.querySelectorAll('.quantity-input');
-    
-    quantityInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const productId = this.dataset.productId;
-            const quantity = parseInt(this.value);
-            
-            if (quantity <= 0) {
-                // Если количество 0 или меньше, удаляем товар
-                removeCartItem(productId);
-            } else {
-                // Иначе обновляем количество
-                updateCartItemQuantity(productId, quantity);
-            }
-        });
-    });
-    
-    // Обработка кнопки удаления
-    const removeButtons = document.querySelectorAll('.remove-item');
-    
-    removeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            removeCartItem(productId);
-        });
-    });
-    
-    // Функция для обновления количества товара
-    function updateCartItemQuantity(productId, quantity) {
-        // Создаем форму для отправки
-        const formData = new FormData();
-        formData.append('product_id', productId);
-        formData.append('quantity', quantity);
-        formData.append('_token', '{{ csrf_token() }}');
-        
-        // Отправляем AJAX запрос
-        fetch('{{ route('cart.updateQuantity') }}', {
-            method: 'POST',
-            body: formData
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
-    
-    // Функция для удаления товара
-    function removeCartItem(productId) {
-        // Создаем форму для отправки
-        const formData = new FormData();
-        formData.append('book_id', productId);
-        formData.append('_token', '{{ csrf_token() }}');
-        formData.append('_method', 'DELETE');
-        
-        // Отправляем AJAX запрос
-        fetch('{{ route('cart.remove') }}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Удаляем строку из таблицы
-            const row = document.getElementById('cart-item-' + productId);
-            row.remove();
-            
-            // Если корзина пуста, можно перезагрузить страницу или показать сообщение
-            if (document.querySelectorAll('tbody tr').length === 0) {
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ошибка при удалении товара');
-        });
-    }
-});
-</script>
+@section('cart-scripts')
+    <script src="{{ asset('js/updatequantity.js') }}"></script>
+    <script src="{{ asset('js/cart.js') }}"></script>
+@endsection
 </x-app-layout> 

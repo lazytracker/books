@@ -41,8 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/order', [CartController::class, 'order'])->name('cart.order');
+    Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
 	Route::post('/cart/download', [CartController::class, 'download'])->name('cart.download');
 	Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/update-price', [CartController::class, 'updatePrice'])->name('cart.updatePrice');
 });
 
 // Маршруты для заказов
