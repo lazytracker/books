@@ -49,7 +49,11 @@
                                                 {{ $item->price ? number_format($item->price, 2) : '-' }}                                                                                    
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                {{ $item->status }}
+                                                @if($item->is_verified)
+                                                    Готов к скачиванию
+                                                @else
+                                                    {{ $item->status }}
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

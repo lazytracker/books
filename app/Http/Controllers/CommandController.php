@@ -7,7 +7,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class CommandController extends Controller
-{
+{       
         public function toggleStatus($userId, $orderNum)
 {
     // Получаем текущий статус из базы — например, берём первый найденный заказ пользователя с этим номером заказа
