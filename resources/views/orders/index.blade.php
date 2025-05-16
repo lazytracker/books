@@ -79,6 +79,7 @@
     </form>
 
     <!-- Правая часть: кнопка удаления -->
+    
 <form action="{{ route('cart.delete') }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 10px;">
     @csrf
     @method('DELETE')
@@ -92,7 +93,7 @@
     @else
         @if(!$items->first()->is_verified)
             <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
-                Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 333-33-33
+                Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 8 812 678-97-27
             </span>
         @endif
         <button type="button" disabled
