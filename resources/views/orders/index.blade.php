@@ -56,11 +56,36 @@
                                 </tbody>
                             </table>
                              <!-- Кнопка для загрузки текстового файла -->
-                        <form action="{{ route('cart.download') }}" method="POST" class="mt-4">
-                            @csrf
-                            <input type="hidden" name="orderNum" value="{{ $orderNum }}">
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Скачать marc-записи</button>
-                        </form>
+<div class="mt-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <!-- Левая часть: кнопка скачивания и текст -->
+    <form action="{{ route('cart.download') }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+        @csrf
+        <input type="hidden" name="orderNum" value="{{ $orderNum }}">
+
+        @if($items->first()->is_verified)
+            <button type="submit" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Скачать marc-записи
+            </button>
+        @else
+            <button type="button" disabled style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
+                Скачать marc-записи
+            </button>
+            <span style="font-size: 14px; color: #cc0000;">Скачивание записей недоступно. Ожидайте верификации</span>
+        @endif
+    </form>
+
+    <!-- Правая часть: кнопка удаления -->
+    <form action="{{ route('cart.delete') }}" method="POST" style="margin: 0;">
+        @csrf
+        @method('DELETE')
+        <input type="hidden" name="orderNum" value="{{ $orderNum }}">
+        <button type="submit" onclick="return confirm('Удалить весь заказ №{{ $orderNum }}?')"
+            style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Удалить заказ
+        </button>
+    </form>
+</div>
+
                         </div>
                             </div>
                         @endforeach

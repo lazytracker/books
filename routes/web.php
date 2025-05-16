@@ -24,6 +24,12 @@ Route::post('/cart/updateQuantity', [CartController::class, 'updateQuantity'])->
 */
 
 // Главная страница теперь показывает список книг
+Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 'toggleVerification'])
+    ->name('admin.order.toggleVerification');
+
+    Route::delete('/cart/delete', [CartController::class, 'deleteByOrderNum'])->name('cart.delete');
+
+
 Route::get('/', [BookController::class, 'index'])->name('home');
 
 // Добавляем маршрут dashboard

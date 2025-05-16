@@ -202,4 +202,13 @@ class CartController extends Controller
             return response()->make($content, 200, $headers);
         }
     }
+    public function deleteByOrderNum(Request $request)
+{
+    $orderNum = $request->input('orderNum');
+
+    // Удаляем все элементы с этим номером заказа
+    Order::where('ordernum', $orderNum)->delete();
+
+    return redirect()->back()->with('success', 'Заказ №'.$orderNum.' удалён.');
+}
 }

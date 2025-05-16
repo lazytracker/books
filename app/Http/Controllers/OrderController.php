@@ -7,7 +7,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
+{   
+    public function toggleVerification($userId, $orderNum)
 {
+    $orders = Order::where('userid', $userId)
+                    ->where('ordernum', $orderNum)
+                    ->get();
+
+    if ($orders->isEmpty()) {
+        return redirect()->back()->with('error', 'Заказ не найден');
+    }
+
+    // Проверим текущий статус по первому элементу (предполагаем, что у всех одинаковый статус)
+    $currentStatus = $orders->first()->is_verified;
+
+    // Переключаем статус
+    $newStatus = $currentStatus ? 0 : 1;
+
+    foreach ($orders as $order) {
+        $order->is_verified = $newStatus;
+        $order->verified_at = $newStatus ? now() : null;
+        $order->save();
+    }
+
+    return redirect()->back()->with('success', 'Статус верификации заказа обновлен');
+}
     public function index(){
 
         $orderItems = Order::with('book')
