@@ -83,16 +83,18 @@
     @csrf
     @method('DELETE')
     <input type="hidden" name="orderNum" value="{{ $orderNum }}">
-    
-    @if($items->first()->is_verified)
+
+    @if($items->first()->status === 'в обработке')
         <button type="submit" onclick="return confirm('Удалить весь заказ №{{ $orderNum }}?')"
             style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
             Удалить заказ
         </button>
     @else
-        <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
-            Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 8 812 678-97-27
-        </span>
+        @if(!$items->first()->is_verified)
+            <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
+                Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 333-33-33
+            </span>
+        @endif
         <button type="button" disabled
             style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
             Удалить заказ
