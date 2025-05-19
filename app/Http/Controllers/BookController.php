@@ -79,6 +79,7 @@ class BookController extends Controller
             ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
             ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
             ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+            ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
             ->get();
 
         // Получаем информацию о товарах, которые уже в корзине пользователя
