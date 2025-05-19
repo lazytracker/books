@@ -80,7 +80,7 @@ class BookController extends Controller
             ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
             ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
             ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-            ->orWhereRaw("REPLACE(seqNum, '.', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+            ->orWhere('seqNum', 'LIKE', '%' . $normalizedSearchTerm . '%')
             ->get();
 
         // Получаем информацию о товарах, которые уже в корзине пользователя
