@@ -10,6 +10,26 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
+        public function cancel($userid, $ordernum)
+    {
+        $order = Order::where('userid', $userid)
+                      ->where('ordernum', $ordernum)
+                      ->first();
+
+        if (!$order) {
+            return redirect()->back()->with('error', 'Заказ не найден.');
+        }
+
+        // Можно проверить, что заказ еще не отменён
+        if ($order->status === 'Отменён') {
+            return redirect()->back()->with('info', 'Заказ уже отменён.');
+        }
+
+        $order->status = 'Отменён';
+        $order->save();
+
+        return redirect()->back()->with('success', 'Заказ успешно отменён.');
+    }
     public function downloadCsv(Request $request)
     {
         $orderNumber = $request->query('ordernum');

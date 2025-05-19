@@ -27,10 +27,14 @@ Route::post('/cart/updateQuantity', [CartController::class, 'updateQuantity'])->
 Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 'toggleVerification'])
     ->name('admin.order.toggleVerification');
 
+    Route::post('/admin/orders/{userId}/{orderNum}/cancel', [OrderController::class, 'cancel'])
+    ->name('admin.order.cancel');
+
+
     Route::delete('/cart/delete', [CartController::class, 'deleteByOrderNum'])->name('cart.delete');
 Route::post('/admin/order/toggle-status/{userId}/{orderNum}', [CommandController::class, 'toggleStatus'])
     ->name('admin.order.toggleStatus');
-    
+
 Route::get('/download-csv', [OrderController::class, 'downloadCsv'])->name('download.csv');
 
 Route::get('/', [BookController::class, 'index'])->name('home');

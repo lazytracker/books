@@ -19,7 +19,18 @@
                         <h2 class="font-bold">{{ $group['user']->name }}</h2>
 
                         @foreach($group['orders'] as $orderNum => $cartItems)
-                            <h3 class="font-semibold">Заказ № {{ $orderNum }}</h3>
+@php
+    $firstItem = $cartItems->first();
+    $status = $firstItem->status ?? 'нет статуса';
+    $isCancelled = mb_strtolower($status) === 'отменён';
+    $isVerified = $firstItem->is_verified;
+    $canVerify = mb_strtolower($status) === 'принят в работу';
+    $createdAt = $firstItem->created_at ? $firstItem->created_at->format('d.m.Y H:i') : 'нет даты';
+@endphp
+                            <h3 class="font-semibold flex justify-between items-center">
+                                <span>Заказ № {{ $orderNum }} от <span class="mx-2">{{ $createdAt }}</span></span>
+                                <span class="w-78 text-right whitespace-nowrap">Статус: {{ $status }}</span>
+                            </h3>
                             <table class="w-full">
                                 <thead>
                                     <tr>
@@ -37,99 +48,78 @@
                                 </tbody>
                             </table>
 
-                            <div class="mt-4 mb-4 flex items-center gap-4">
-                                <a href="{{ route('order.download', [$userId, $orderNum]) }}"
-                                   class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
-                                    Скачать
-                                </a>
-                                <a href="{{ url('/download-csv?ordernum=' . $orderNum) }}"
-                                    class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
-                                    Скачать CSV
-                                </a>
+                            <div class="mt-4 mb-4 flex items-center gap-4 justify-between order-block" data-cancelled="{{ $isCancelled ? '1' : '0' }}">
+                                <div class="flex items-center gap-4 order-action-group">
+                                    <a href="{{ route('order.download', [$userId, $orderNum]) }}"
+                                       class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
+                                        Скачать
+                                    </a>
+                                    <a href="{{ url('/download-csv?ordernum=' . $orderNum) }}"
+                                       class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
+                                        Скачать CSV
+                                    </a>
 
-                                @if ($cartItems->first()->is_verified)
-                                    <div
-                                        style="
-                                            margin: 12px;
-                                            padding: 8px 16px;
-                                            border-radius: 6px;
-                                            font-weight: 600;
-                                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                                            color: rgb(14, 161, 70); /* тёмно-зелёный текст */
-                                            background-color: transparent;
-                                            border: transparent; /* тёмно-зелёная обводка */
-                                            cursor: default;
-                                            text-align: center;
-                                            display: inline-block;
-                                            width: 190px;
-                                            user-select: none;
-                                        "
-                                    >
-                                        Заказ готов
-                                    </div>
+                                    @if ($cartItems->first()->is_verified)
+                                        <div class="m-3 px-4 py-2 font-semibold rounded shadow text-green-600 w-[190px] text-center select-none">
+                                            Заказ готов
+                                        </div>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.order.toggleStatus', [$userId, $orderNum]) }}">
+                                            @csrf
+                                            <button type="submit"
+                                                class="px-4 py-2 font-semibold rounded shadow text-white w-[190px]"
+                                                style="background-color: {{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}"
+                                                onmouseover="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#b91c1c' : '#1d4ed8' }}'"
+                                                onmouseout="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}'"
+                                            >
+                                                {{ $cartItems->first()->status === 'Принят в работу' ? 'Убрать из работы' : 'Принять в работу' }}
+                                            </button>
+                                        </form>
+                                    @endif
 
-                                @else
-                                    <form method="POST" action="{{ route('admin.order.toggleStatus', [$userId, $orderNum]) }}">
+                                    @php
+                                        $firstItem = $cartItems->first();
+                                        $isVerified = $firstItem->is_verified;
+                                        $status = mb_strtolower($firstItem->status);
+                                        $canVerify = $status === 'принят в работу';
+                                    @endphp
+
+                                    <form method="POST" action="{{ route('admin.order.toggleVerification', [$userId, $orderNum]) }}">
                                         @csrf
                                         <button type="submit"
+                                            {{ (!$isVerified && !$canVerify) ? 'disabled' : '' }}
+                                            class="px-4 py-2 font-semibold rounded shadow text-white w-[190px]"
                                             style="
-                                                margin: 12px;
-                                                padding: 8px 16px;
-                                                border-radius: 6px;
-                                                font-weight: 600;
-                                                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                                                color: white;
-                                                background-color: {{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }};
-                                                border: none;
-                                                cursor: pointer;
-                                                width: 190px;
+                                                cursor: {{ (!$isVerified && !$canVerify) ? 'not-allowed' : 'pointer' }};
+                                                background-color: {{
+                                                    $isVerified
+                                                        ? '#dc2626'
+                                                        : ($canVerify ? '#16a34a' : '#9ca3af')
+                                                }};
                                             "
-                                            onmouseover="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#b91c1c' : '#1d4ed8' }}'"
-                                            onmouseout="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}'"
+                                            onmouseover="
+                                                if (!this.disabled) {
+                                                    this.style.backgroundColor = '{{ $isVerified ? '#b91c1c' : '#15803d' }}';
+                                                }
+                                            "
+                                            onmouseout="
+                                                this.style.backgroundColor = '{{ $isVerified ? '#dc2626' : ($canVerify ? '#16a34a' : '#9ca3af') }}';
+                                            "
+                                            title="{{ (!$isVerified && !$canVerify) ? 'Можно верифицировать только после принятия в работу' : '' }}"
                                         >
-                                            {{ $cartItems->first()->status === 'Принят в работу' ? 'Убрать из работы' : 'Принять в работу' }}
+                                            {{ $isVerified ? 'Снять верификацию' : 'Верифицировать' }}
                                         </button>
                                     </form>
-                                @endif
+                                </div>
 
-                                @php
-                                    $firstItem = $cartItems->first();
-                                    $isVerified = $firstItem->is_verified;
-                                    $status = mb_strtolower($firstItem->status);
-                                    $canVerify = $status === 'принят в работу';
-                                @endphp
-
-                                <form method="POST" action="{{ route('admin.order.toggleVerification', [$userId, $orderNum]) }}">
+                                {{-- Кнопка "Отменить заказ" справа --}}
+                                <form method="POST" action="{{ route('admin.order.cancel', [$userId, $orderNum]) }}" class="cancel-form">
                                     @csrf
                                     <button type="submit"
-                                        {{ (!$isVerified && !$canVerify) ? 'disabled' : '' }}
-                                        style="
-                                            margin: 12px;
-                                            padding: 8px 16px;
-                                            border-radius: 6px;
-                                            font-weight: 600;
-                                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                                            color: white;
-                                            border: none;
-                                            width: 190px;
-                                            cursor: {{ (!$isVerified && !$canVerify) ? 'not-allowed' : 'pointer' }};
-                                            background-color: {{
-                                                $isVerified
-                                                    ? '#dc2626'  /* красный */
-                                                    : ($canVerify ? '#16a34a' /* зелёный */ : '#9ca3af') /* серый */
-                                            }};
-                                        "
-                                        onmouseover="
-                                            if (!this.disabled) {
-                                                this.style.backgroundColor = '{{ $isVerified ? '#b91c1c' : '#15803d' }}';
-                                            }
-                                        "
-                                        onmouseout="
-                                            this.style.backgroundColor = '{{ $isVerified ? '#dc2626' : ($canVerify ? '#16a34a' : '#9ca3af') }}';
-                                        "
-                                        title="{{ (!$isVerified && !$canVerify) ? 'Можно верифицировать только после принятия в работу' : '' }}"
+                                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow cancel-btn"
+                                        onclick="disableOrderActions(event, this)"
                                     >
-                                        {{ $isVerified ? 'Снять верификацию' : 'Верифицировать' }}
+                                        Отменить заказ
                                     </button>
                                 </form>
                             </div>
@@ -140,4 +130,37 @@
             @endif
         </div>
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.order-block').forEach(block => {
+        if (block.dataset.cancelled === '1') {
+            disableButtonsInBlock(block);
+        }
+    });
+});
+
+function disableButtonsInBlock(orderBlock) {
+    const buttons = orderBlock.querySelectorAll('button, a');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    });
+}
+
+function disableOrderActions(event, button) {
+    event.preventDefault(); // чтобы форма не отправлялась сразу
+
+    // Находим родительский блок заказа (order-block)
+    const orderBlock = button.closest('.order-block');
+
+    // Отключаем кнопки в блоке
+    disableButtonsInBlock(orderBlock);
+
+    // Отправляем форму вручную через JS (после отключения кнопок)
+    button.closest('form').submit();
+}
+
+    </script>
 </x-app-layout>
