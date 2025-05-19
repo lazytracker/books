@@ -53,7 +53,7 @@
                             </label>
                             <label class="inline-flex items-center">
                                 <input type="radio" name="filter1" class="form-radio" value="option4" />
-                                <span class="ml-2">Отколённые</span>
+                                <span class="ml-2">Отклонённые</span>
                             </label>
                         </div>
                     </form>
