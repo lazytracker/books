@@ -23,7 +23,7 @@
         <div class="flex justify-between items-center mb-4">
             {{-- Левая часть: сортировка --}}
             <div class="flex items-center space-x-2">
-                <label for="sort" class="font-semibold text-gray-700">Сортировка по дате заказа:</label>
+                <label for="sort" class="font-semibold text-gray-700">Сортировка:</label>
                 <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                     <option value="newest">Сначала новые</option>
                     <option value="oldest">Сначала старые</option>
