@@ -55,9 +55,9 @@
                                             border-radius: 6px;
                                             font-weight: 600;
                                             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                                            color: white;
-                                            background-color: rgb(15, 63, 33); /* тёмно-зелёный (green-800) */
-                                            border: none;
+                                            color: rgb(14, 161, 70); /* тёмно-зелёный текст */
+                                            background-color: transparent;
+                                            border: transparent; /* тёмно-зелёная обводка */
                                             cursor: default;
                                             text-align: center;
                                             display: inline-block;
@@ -67,6 +67,7 @@
                                     >
                                         Заказ готов
                                     </div>
+
                                 @else
                                     <form method="POST" action="{{ route('admin.order.toggleStatus', [$userId, $orderNum]) }}">
                                         @csrf
