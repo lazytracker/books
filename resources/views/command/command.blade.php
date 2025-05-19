@@ -1,32 +1,102 @@
 {{-- resources/views/command.blade.php --}}
 
 <x-app-layout>
-    <x-slot name="header">
+<x-slot name="header">
+    <div class="flex flex-col">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Заказы') }}
         </h2>
-    </x-slot>
+        <input
+            type="text"
+            placeholder="Данные заказчика, дата, номер заказа..."
+            class="mt-2 max-w-md rounded-md border border-gray-300 shadow-sm
+                   focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        >
+    </div>
+</x-slot>
 
-    <div class="py-12">
-        <div class="container max-w-full mx-auto px-4 sm:px-6 lg:px-8 customMargin">
-            <h1 class="text-2xl font-bold ml-[20%]">Все заказы</h1>
 
-            @if($groupedCartItems->isEmpty())
-                <p>No orders found.</p>
-            @else
-                @foreach($groupedCartItems as $userId => $group)
-                    <div class="customCard w-1/2 m-3 p-4 border rounded shadow">
+<div class="py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+
+        {{-- Верхняя панель с сортировкой и фильтрами --}}
+        <div class="flex justify-between items-center mb-4">
+            {{-- Левая часть: сортировка --}}
+            <div class="flex items-center space-x-2">
+                <label for="sort" class="font-semibold text-gray-700">Сортировка по дате заказа:</label>
+                <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <option value="newest">Сначала новые</option>
+                    <option value="oldest">Сначала старые</option>
+                    <option value="asc">По возрастанию даты</option>
+                    <option value="desc">По убыванию даты</option>
+                </select>
+            </div>
+
+            {{-- Правая часть: фильтры в два столбца --}}
+            <div class="flex space-x-8">
+                {{-- Первый столбец фильтров --}}
+                <div>
+                    <div class="font-semibold text-gray-700 mb-2">Заказы</div>
+                    <form>
+                        <div class="flex flex-col space-y-3">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter1" class="form-radio" value="option1" />
+                                <span class="ml-2">Все</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter1" class="form-radio" value="option2" />
+                                <span class="ml-2">Выполненные</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter1" class="form-radio" value="option3" />
+                                <span class="ml-2">Не выполненые</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter1" class="form-radio" value="option4" />
+                                <span class="ml-2">Отколённые</span>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Второй столбец фильтров --}}
+                <div>
+                    <div class="font-semibold text-gray-700 mb-2">Клиенты</div>
+                    <form>
+                        <div class="flex flex-col space-y-3">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter2" class="form-radio" value="optionA" />
+                                <span class="ml-2">Активные клиенты</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter2" class="form-radio" value="optionB" />
+                                <span class="ml-2">Все</span>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <h1 class="text-2xl font-bold text-center mb-6">Все заказы</h1>
+
+    @if($groupedCartItems->isEmpty())
+      <p class="text-center">No orders found.</p>
+    @else
+      <div class="flex flex-col items-center">
+        @foreach($groupedCartItems as $userId => $group)
+          <div class="customCard w-full max-w-4xl m-3 p-4 border rounded shadow">
                         <h2 class="font-bold">{{ $group['user']->name }}</h2>
 
                         @foreach($group['orders'] as $orderNum => $cartItems)
-@php
-    $firstItem = $cartItems->first();
-    $status = $firstItem->status ?? 'нет статуса';
-    $isCancelled = mb_strtolower($status) === 'отменён';
-    $isVerified = $firstItem->is_verified;
-    $canVerify = mb_strtolower($status) === 'принят в работу';
-    $createdAt = $firstItem->created_at ? $firstItem->created_at->format('d.m.Y H:i') : 'нет даты';
-@endphp
+                            @php
+                                $firstItem = $cartItems->first();
+                                $status = $firstItem->status ?? 'нет статуса';
+                                $isCancelled = mb_strtolower($status) === 'отменён';
+                                $isVerified = $firstItem->is_verified;
+                                $canVerify = mb_strtolower($status) === 'принят в работу';
+                                $createdAt = $firstItem->created_at ? $firstItem->created_at->format('d.m.Y H:i') : 'нет даты';
+                            @endphp
                             <h3 class="font-semibold flex justify-between items-center">
                                 <span>Заказ № {{ $orderNum }} от <span class="mx-2">{{ $createdAt }}</span></span>
                                 <span class="w-78 text-right whitespace-nowrap">Статус: {{ $status }}</span>
