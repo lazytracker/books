@@ -49,7 +49,7 @@
                             </label>
                             <label class="inline-flex items-center">
                                 <input type="radio" name="filter1" class="form-radio" value="option3" />
-                                <span class="ml-2">Не выполненые</span>
+                                <span class="ml-2">Не выполненные</span>
                             </label>
                             <label class="inline-flex items-center">
                                 <input type="radio" name="filter1" class="form-radio" value="option4" />
