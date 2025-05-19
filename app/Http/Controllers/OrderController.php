@@ -5,9 +5,85 @@ use App\Models\Order;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
-{   
+{
+    public function downloadCsv(Request $request)
+    {
+        $orderNumber = $request->query('ordernum');
+
+        $filename = "order_{$orderNumber}.csv";
+
+        $orders = DB::table('orders')
+            ->join('books', 'orders.productid', '=', 'books.id')
+            ->join('users', 'orders.userid', '=', 'users.id')
+            ->select(
+                'books.ART',
+                'books.seqNum',
+                DB::raw('"" as empty1'),
+                'books.author',
+                'books.caption',
+                'books.year',
+                'books.subj',
+                'orders.quantity',
+                'orders.price',
+                DB::raw('"" as empty2'),
+                'orders.created_at',
+                'books.url_id',
+                'orders.ordernum',
+                'orders.userid',
+                'users.inn',
+                'books.pubCompany',
+                'books.isbn'
+            )
+            ->where('orders.ordernum', $orderNumber)
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+        ];
+
+        $columns = [
+            'ART', 'seqNum', '', 'author', 'caption', 'year', 'subj',
+            'quantity', 'price', '', 'created_at', 'url_id', 'ordernum',
+            'userid', 'inn', 'pubCompany', 'isbn'
+        ];
+
+        $callback = function () use ($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            #fputcsv($file, $columns);
+            
+
+foreach ($orders as $row) {
+    fputcsv($file, [
+        mb_convert_encoding($row->ART, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->seqNum, 'Windows-1251', 'UTF-8'),
+        '',
+        mb_convert_encoding($row->author, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->caption, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->year, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->subj, 'Windows-1251', 'UTF-8'),
+        $row->quantity,
+        $row->price,
+        '',
+        $row->created_at,
+        $row->url_id,
+        $row->ordernum,
+        $row->userid,
+        mb_convert_encoding($row->inn, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->pubCompany, 'Windows-1251', 'UTF-8'),
+        mb_convert_encoding($row->isbn, 'Windows-1251', 'UTF-8'),
+    ]);
+}
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }  
     public function toggleVerification($userId, $orderNum)
 {
     $orders = Order::where('userid', $userId)

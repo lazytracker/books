@@ -42,8 +42,7 @@
                                    class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
                                     Скачать
                                 </a>
-                                <a href="{{ route('order.download', [$userId, $orderNum]) }}"
-                                   class="m-3 bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow hover:bg-blue-700">
+                                <a href="{{ url('/download-csv?ordernum=' . $orderNum) }}" class="btn btn-primary">
                                     Скачать CSV
                                 </a>
 
