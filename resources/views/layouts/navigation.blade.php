@@ -33,7 +33,9 @@
                         </x-nav-link>
                         @endif
                     @endauth
-               
+               <x-nav-link :href="route('about')" :active="request()->routeIs('about')">
+                    {{ __('О сайте') }}
+                </x-nav-link>
                 </div>
             </div>
 

@@ -39,6 +39,10 @@ Route::get('/download-csv', [OrderController::class, 'downloadCsv'])->name('down
 
 Route::get('/', [BookController::class, 'index'])->name('home');
 
+Route::get('/about', function () {
+    return view('about.about'); // папка.about
+})->name('about');
+
 // Добавляем маршрут dashboard
 Route::get('/dashboard', function () {
     return view('dashboard');
