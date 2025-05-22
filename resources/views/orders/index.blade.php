@@ -66,16 +66,20 @@
         @csrf
         <input type="hidden" name="orderNum" value="{{ $orderNum }}">
 
-        @if($items->first()->is_verified)
-            <button type="submit" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Скачать marc-записи
-            </button>
-        @else
-            <button type="button" disabled style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
-                Скачать marc-записи
-            </button>
-            <span style="font-size: 14px; color: #cc0000;">Скачивание записей недоступно. Ожидайте верификации</span>
-        @endif
+@if($items->first()->is_verified)
+    <button type="submit" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Скачать marc-записи
+    </button>
+@else
+    <button type="button" disabled style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
+        Скачать marc-записи
+    </button>
+    @if($items->first()->status === 'Отменён')
+        <span style="font-size: 14px; color: #cc0000;">Скачивание записей недоступно. Заказ отменён</span>
+    @else
+        <span style="font-size: 14px; color: #cc0000;">Скачивание записей недоступно. Ожидайте верификации</span>
+    @endif
+@endif
     </form>
 
     <!-- Правая часть: кнопка удаления -->
@@ -90,17 +94,21 @@
             style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
             Удалить заказ
         </button>
-    @else
-        @if(!$items->first()->is_verified)
-            <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
-                Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 8 812 678-97-27
-            </span>
-        @endif
-        <button type="button" disabled
-            style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
-            Удалить заказ
-        </button>
+@else
+    @if($items->first()->status === 'Отменён')
+        <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
+            Заказ отменён. Если вы считаете, что произошла ошибка, то можете связаться с нами по телефону 8 812 678-97-27
+        </span>
+    @elseif(!$items->first()->is_verified)
+        <span style="color: #cc0000; font-size: 14px; white-space: nowrap;">
+            Заказ принят в работу, удаление невозможно. Вы можете связаться с нами по телефону 8 812 678-97-27
+        </span>
     @endif
+    <button type="button" disabled
+        style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
+        Удалить заказ
+    </button>
+@endif
 </form>
 </div>
 

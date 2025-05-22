@@ -10,26 +10,34 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
-        public function cancel($userid, $ordernum)
-    {
-        $order = Order::where('userid', $userid)
-                      ->where('ordernum', $ordernum)
-                      ->first();
+public function cancel($userid, $ordernum)
+{
+    // Получаем все позиции заказа для пользователя и ordernum
+    $orders = Order::where('userid', $userid)
+                   ->where('ordernum', $ordernum)
+                   ->get();
 
-        if (!$order) {
-            return redirect()->back()->with('error', 'Заказ не найден.');
-        }
-
-        // Можно проверить, что заказ еще не отменён
-        if ($order->status === 'Отменён') {
-            return redirect()->back()->with('info', 'Заказ уже отменён.');
-        }
-
-        $order->status = 'Отменён';
-        $order->save();
-
-        return redirect()->back()->with('success', 'Заказ успешно отменён.');
+    if ($orders->isEmpty()) {
+        return redirect()->back()->with('error', 'Заказ не найден.');
     }
+
+    // Проверяем, отменены ли все позиции
+    $allCancelled = $orders->every(function ($order) {
+        return $order->status === 'Отменён';
+    });
+
+    if ($allCancelled) {
+        return redirect()->back()->with('info', 'Заказ уже отменён.');
+    }
+
+    // Обновляем статус всех позиций заказа
+    Order::where('userid', $userid)
+         ->where('ordernum', $ordernum)
+         ->update(['status' => 'Отменён']);
+
+    return redirect()->back()->with('success', 'Заказ успешно отменён.');
+}
+
     public function downloadCsv(Request $request)
     {
         $orderNumber = $request->query('ordernum');
