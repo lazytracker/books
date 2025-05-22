@@ -24,11 +24,9 @@
             {{-- Левая часть: сортировка --}}
             <div class="flex items-center space-x-2">
                 <label for="sort" class="font-semibold text-gray-700">Сортировка:</label>
-                <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                    <option value="newest">Сначала новые</option>
-                    <option value="oldest">Сначала старые</option>
-                    <option value="asc">По возрастанию даты</option>
-                    <option value="desc">По убыванию даты</option>
+                <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" onchange="handleSortChange()">
+                    <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>По номеру заказа (убывание)</option>    
+                    <option value="asc" {{ request('sort') == 'asc' ? 'selected' : '' }}>По номеру заказа (возрастание)</option>
                 </select>
             </div>
 
@@ -239,6 +237,17 @@ function disableOrderActions(event, button) {
 
     // Отправляем форму вручную через JS (после отключения кнопок)
     button.closest('form').submit();
+}
+
+function handleSortChange() {
+    const sortSelect = document.getElementById('sort');
+    const currentUrl = new URL(window.location.href);
+    
+    // Обновляем параметр sort в URL
+    currentUrl.searchParams.set('sort', sortSelect.value);
+    
+    // Перенаправляем на новый URL
+    window.location.href = currentUrl.toString();
 }
 
     </script>
