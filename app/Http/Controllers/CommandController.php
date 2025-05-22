@@ -37,14 +37,15 @@ class CommandController extends Controller
     $cartItems = Order::with(['book', 'user'])->get();
     
     // Group by user_id first, then by ordernum
-    $groupedCartItems = $cartItems->groupBy('userid')->map(function ($orders) {
-        // Instead of using first(), we can just access the user from the first order
-        $user = $orders->first()->user; // Get the user from the first order
-        return [
-            'user' => $user, // Store the user
-            'orders' => $orders->groupBy('ordernum') // Group by order number
-        ];
-    });
+$groupedCartItems = $cartItems->groupBy('ordernum')->map(function ($orders, $orderNum) {
+    $firstItem = $orders->first();
+    return [
+        'ordernum' => $orderNum,
+        'user' => $firstItem->user, // Пользователь для этого заказа
+        'userid' => $firstItem->userid, // ID пользователя
+        'items' => $orders // Все элементы заказа
+    ];
+})->sortBy('ordernum'); // Сортируем по номеру заказа
     
     
     return view('command/command', compact('groupedCartItems'));
