@@ -44,7 +44,7 @@ class CommandController extends Controller
         });
 
         // Apply sorting based on request parameter
-        $sort = $request->get('sort', 'asc'); // Default to ascending
+        $sort = $request->get('sort', 'desc'); // Default to ascending
         
         if ($sort === 'desc') {
             $groupedCartItems = $groupedCartItems->sortByDesc('ordernum');

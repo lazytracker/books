@@ -22,6 +22,9 @@ Route::post('/cart/updateQuantity', [CartController::class, 'updateQuantity'])->
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+use App\Http\Controllers\TestController;
+
+Route::get('/test', [TestController::class, 'index']);
 
 // Главная страница теперь показывает список книг
 Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 'toggleVerification'])
