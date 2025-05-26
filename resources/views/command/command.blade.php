@@ -100,25 +100,32 @@
                                     <span class="ml-4 text-blue-600">Пользователь: {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})</span>
                                 </span>
                                 <span class="w-78 text-right whitespace-nowrap">Статус: {{ $status }}</span>
-                            </h3>
-                            
-                            <table class="w-full mt-4">
-                                <thead>
-                                    <tr>
-                                        <th class="text-left">Учебник</th>
-                                        <th class="text-left">Количество</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($cartItems as $cartItem)
-                                        <tr>
-                                            <td>{{ $cartItem->book->caption }}</td>
-                                            <td>{{ $cartItem->quantity }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            </h3>                            
+                                <style>
+                                    .approved-row {
+                                        background-color:rgb(44, 235, 136); /* светло-зелёный фон */
+                                    }
+                                </style>
 
+                                <table class="w-full mt-4">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-left">Учебник</th>
+                                            <th class="text-left">Количество</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($cartItems as $cartItem)
+                                            @php
+                                                $isApproved = $cartItem->book->approved == 1;
+                                            @endphp
+                                            <tr class="{{ $isApproved ? 'approved-row' : '' }}">
+                                                <td>{{ $cartItem->book->caption }}</td>
+                                                <td>{{ $cartItem->quantity }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             <div class="mt-4 mb-4 flex items-center gap-4 justify-between order-block" data-cancelled="{{ $isCancelled ? '1' : '0' }}">
                                 <div class="flex items-center gap-4 order-action-group">
                                     <a href="{{ route('order.download', [$orderData['userid'], $orderData['ordernum']]) }}"
