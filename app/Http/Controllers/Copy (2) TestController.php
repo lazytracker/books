@@ -9,10 +9,10 @@ class TestController extends Controller
     public function index()
     {
         require_once base_path('irbis_class.inc');
-$source_db = 'NEB';      // Исходная база
-$target_db = 'TESTNEB'; // Целевая база (замените на нужное название)
-$record_id = 44;          // ID записи для переноса
-$id_field_num = 1;        // Номер поля для ID записи
+// Настройки подключения
+$source_db = 'IBIS';      // Исходная база
+$target_db = 'IBISTEST'; // Целевая база (замените на нужное название)
+$record_id = 22;          // ID записи для переноса
 
 // Подключение к исходной базе
 $irbis_source = new \irbis64('127.0.0.1', 6666, 1, 1, $source_db);
@@ -25,6 +25,8 @@ try {
     if (!$irbis_source->login()) {
         throw new \Exception("Ошибка подключения к исходной базе: " . $irbis_source->error());
     }
+    
+    // Авторизация в целевой базе
 
     
     echo "Поиск записи с ID=$record_id в базе $source_db..." . PHP_EOL;
@@ -56,12 +58,11 @@ try {
     // Проверяем, существует ли уже запись с таким ID в целевой базе
     $existing_check = $irbis_target->term_records("ID=" . $record_id, 0, 1);
     
-    // Ошибка -202 "Термин не существует" - это нормально, значит записи с таким ID нет
     if ($irbis_target->error_code != 0 && $irbis_target->error_code != -202) {
-        throw new \Exception("Ошибка проверки целевой базы: " . $irbis_target->error());
+        throw new Exception("Ошибка проверки целевой базы: " . $irbis_target->error());
     }
     
-    if ($existing_check && !empty($existing_check) && $irbis_target->error_code != -202) {
+    if ($existing_check && !empty($existing_check)) {
         echo "ВНИМАНИЕ: Запись с ID=$record_id уже существует в базе $target_db" . PHP_EOL;
         echo "Выберите действие: перезаписать существующую запись? (y/n): ";
         $handle = fopen("php://stdin", "r");
@@ -104,7 +105,7 @@ try {
     // Выводим некоторую информацию о перенесенной записи
     echo "Информация о записи:" . PHP_EOL;
     echo "- Поле 200: " . $record->getField(200, 1) . PHP_EOL;
-    echo "- Поле $id_field_num (ID): " . $record->getField($id_field_num, 1) . PHP_EOL;
+    echo "- Поле 1 (ID): " . $record->getField(1, 1) . PHP_EOL;
     echo "- Количество полей: " . count($record->getRecordArray()['fields']) . PHP_EOL;
     
 } catch (Exception $e) {
