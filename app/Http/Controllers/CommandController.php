@@ -21,21 +21,29 @@ class CommandController extends Controller
         
         $currentStatus = $firstOrder->status;
         $newStatus = '';
+        $newIsVerified = 0;
         
         // Определяем новый статус в зависимости от текущего
         if ($currentStatus === 'в обработке') {
             $newStatus = 'Принят в работу';
+            $newIsVerified = 0;
         } elseif ($currentStatus === 'Принят в работу') {
             $newStatus = 'в обработке';
+            $newIsVerified = 0;
         } else {
             return redirect()->back()->with('error', 'Невозможно изменить статус для заказа со статусом: ' . $currentStatus);
         }
         
-        // Обновляем статус для всех позиций данного заказа
+        // Обновляем статус, is_verified и очищаем verified_at для всех позиций данного заказа
         DB::table('orders')
             ->where('userid', $userId)
             ->where('ordernum', $orderNum)
-            ->update(['status' => $newStatus, 'updated_at' => now()]);
+            ->update([
+                'status' => $newStatus, 
+                'is_verified' => $newIsVerified,
+                'verified_at' => null,
+                'updated_at' => now()
+            ]);
             
         return redirect()->back()->with('success', "Статус заказа #{$orderNum} изменён на '{$newStatus}'");
     }
@@ -54,21 +62,32 @@ class CommandController extends Controller
         
         $currentStatus = $firstOrder->status;
         $newStatus = '';
+        $newIsVerified = 0;
+        $verifiedAt = null;
         
         // Определяем новый статус в зависимости от текущего
         if ($currentStatus === 'Принят в работу') {
             $newStatus = 'Готов к выдаче';
+            $newIsVerified = 1;
+            $verifiedAt = now();
         } elseif ($currentStatus === 'Готов к выдаче') {
             $newStatus = 'Принят в работу';
+            $newIsVerified = 0;
+            $verifiedAt = null;
         } else {
             return redirect()->back()->with('error', 'Невозможно изменить верификацию для заказа со статусом: ' . $currentStatus);
         }
         
-        // Обновляем статус для всех позиций данного заказа
+        // Обновляем статус, is_verified и verified_at для всех позиций данного заказа
         DB::table('orders')
             ->where('userid', $userId)
             ->where('ordernum', $orderNum)
-            ->update(['status' => $newStatus, 'updated_at' => now()]);
+            ->update([
+                'status' => $newStatus, 
+                'is_verified' => $newIsVerified,
+                'verified_at' => $verifiedAt,
+                'updated_at' => now()
+            ]);
             
         $actionText = $newStatus === 'Готов к выдаче' ? 'верифицирован' : 'снята верификация';
         return redirect()->back()->with('success', "Заказ #{$orderNum} {$actionText}");
