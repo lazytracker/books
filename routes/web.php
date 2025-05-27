@@ -32,7 +32,8 @@ Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 
 
     Route::post('/admin/orders/{userId}/{orderNum}/cancel', [OrderController::class, 'cancel'])
     ->name('admin.order.cancel');
-
+Route::post('/admin/order/{userId}/{orderNum}/toggle-verification', [CommandController::class, 'toggleVerification'])
+    ->name('admin.order.toggleVerification');
 
     Route::delete('/cart/delete', [CartController::class, 'deleteByOrderNum'])->name('cart.delete');
 Route::post('/admin/order/toggle-status/{userId}/{orderNum}', [CommandController::class, 'toggleStatus'])

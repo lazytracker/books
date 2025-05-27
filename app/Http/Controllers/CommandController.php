@@ -9,22 +9,69 @@ class CommandController extends Controller
 {      
     public function toggleStatus($userId, $orderNum)
     {
-        // Получаем текущий статус из базы — например, берём первый найденный заказ пользователя с этим номером заказа
+        // Получаем текущий статус из базы
         $firstOrder = DB::table('orders')
             ->where('userid', $userId)
             ->where('ordernum', $orderNum)
             ->first();
+            
         if (!$firstOrder) {
             return redirect()->back()->with('error', 'Заказ не найден');
         }
-        // Определяем новый статус
-        $newStatus = $firstOrder->status === 'Принят в работу' ? 'в обработке' : 'Принят в работу';
+        
+        $currentStatus = $firstOrder->status;
+        $newStatus = '';
+        
+        // Определяем новый статус в зависимости от текущего
+        if ($currentStatus === 'в обработке') {
+            $newStatus = 'Принят в работу';
+        } elseif ($currentStatus === 'Принят в работу') {
+            $newStatus = 'в обработке';
+        } else {
+            return redirect()->back()->with('error', 'Невозможно изменить статус для заказа со статусом: ' . $currentStatus);
+        }
+        
         // Обновляем статус для всех позиций данного заказа
         DB::table('orders')
             ->where('userid', $userId)
             ->where('ordernum', $orderNum)
             ->update(['status' => $newStatus, 'updated_at' => now()]);
+            
         return redirect()->back()->with('success', "Статус заказа #{$orderNum} изменён на '{$newStatus}'");
+    }
+
+    public function toggleVerification($userId, $orderNum)
+    {
+        // Получаем текущий статус из базы
+        $firstOrder = DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->first();
+            
+        if (!$firstOrder) {
+            return redirect()->back()->with('error', 'Заказ не найден');
+        }
+        
+        $currentStatus = $firstOrder->status;
+        $newStatus = '';
+        
+        // Определяем новый статус в зависимости от текущего
+        if ($currentStatus === 'Принят в работу') {
+            $newStatus = 'Готов к выдаче';
+        } elseif ($currentStatus === 'Готов к выдаче') {
+            $newStatus = 'Принят в работу';
+        } else {
+            return redirect()->back()->with('error', 'Невозможно изменить верификацию для заказа со статусом: ' . $currentStatus);
+        }
+        
+        // Обновляем статус для всех позиций данного заказа
+        DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->update(['status' => $newStatus, 'updated_at' => now()]);
+            
+        $actionText = $newStatus === 'Готов к выдаче' ? 'верифицирован' : 'снята верификация';
+        return redirect()->back()->with('success', "Заказ #{$orderNum} {$actionText}");
     }
 
     public function index(Request $request)
@@ -44,7 +91,7 @@ class CommandController extends Controller
         });
 
         // Apply sorting based on request parameter
-        $sort = $request->get('sort', 'desc'); // Default to ascending
+        $sort = $request->get('sort', 'desc'); // Default to descending
         
         if ($sort === 'desc') {
             $groupedCartItems = $groupedCartItems->sortByDesc('ordernum');
