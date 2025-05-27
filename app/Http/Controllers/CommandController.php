@@ -109,6 +109,27 @@ class CommandController extends Controller
             ];
         });
 
+        // Apply status filter
+        $statusFilter = $request->get('status_filter', 'all');
+        if ($statusFilter !== 'all') {
+            $groupedCartItems = $groupedCartItems->filter(function ($orderData) use ($statusFilter) {
+                $status = mb_strtolower($orderData['items']->first()->status ?? '');
+                
+                switch ($statusFilter) {
+                    case 'processing':
+                        return $status === 'в обработке';
+                    case 'accepted':
+                        return $status === 'принят в работу';
+                    case 'ready':
+                        return $status === 'готов к выдаче';
+                    case 'cancelled':
+                        return $status === 'отменён';
+                    default:
+                        return true;
+                }
+            });
+        }
+
         // Apply sorting based on request parameter
         $sort = $request->get('sort', 'desc'); // Default to descending
         

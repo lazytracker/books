@@ -37,20 +37,24 @@
                     <form>
                         <div class="flex flex-col space-y-3">
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio" value="option1" />
+                                <input type="radio" name="filter1" class="form-radio status-filter" value="all" {{ request('status_filter', 'all') == 'all' ? 'checked' : '' }} />
                                 <span class="ml-2">Все</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio" value="option2" />
-                                <span class="ml-2">Выполненные</span>
+                                <input type="radio" name="filter1" class="form-radio status-filter" value="processing" {{ request('status_filter') == 'processing' ? 'checked' : '' }} />
+                                <span class="ml-2">В обработке</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio" value="option3" />
-                                <span class="ml-2">Не выполненные</span>
+                                <input type="radio" name="filter1" class="form-radio status-filter" value="accepted" {{ request('status_filter') == 'accepted' ? 'checked' : '' }} />
+                                <span class="ml-2">Принятые в работу</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio" value="option4" />
-                                <span class="ml-2">Отклонённые</span>
+                                <input type="radio" name="filter1" class="form-radio status-filter" value="ready" {{ request('status_filter') == 'ready' ? 'checked' : '' }} />
+                                <span class="ml-2">Готовые к выдаче</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="filter1" class="form-radio status-filter" value="cancelled" {{ request('status_filter') == 'cancelled' ? 'checked' : '' }} />
+                                <span class="ml-2">Отменённые</span>
                             </label>
                         </div>
                     </form>
@@ -203,12 +207,50 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Восстанавливаем фильтр из localStorage
+            const savedFilter = localStorage.getItem('orderStatusFilter');
+            if (savedFilter) {
+                const filterRadio = document.querySelector(`.status-filter[value="${savedFilter}"]`);
+                if (filterRadio) {
+                    filterRadio.checked = true;
+                }
+            }
+
+            // Добавляем обработчики событий для фильтров
+            document.querySelectorAll('.status-filter').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        handleStatusFilterChange(this.value);
+                    }
+                });
+            });
+
             document.querySelectorAll('.order-block').forEach(block => {
                 if (block.dataset.cancelled === '1') {
                     disableButtonsInBlock(block);
                 }
             });
         });
+
+        function handleStatusFilterChange(filterValue) {
+            // Сохраняем фильтр в localStorage
+            localStorage.setItem('orderStatusFilter', filterValue);
+            
+            const currentUrl = new URL(window.location.href);
+            
+            // Обновляем параметр status_filter в URL
+            if (filterValue === 'all') {
+                currentUrl.searchParams.delete('status_filter');
+            } else {
+                currentUrl.searchParams.set('status_filter', filterValue);
+            }
+            
+            // Сохраняем позицию скролла
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+            
+            // Перенаправляем на новый URL
+            window.location.href = currentUrl.toString();
+        }
 
         function disableButtonsInBlock(orderBlock) {
             const buttons = orderBlock.querySelectorAll('button, a');
@@ -239,8 +281,35 @@
             // Обновляем параметр sort в URL
             currentUrl.searchParams.set('sort', sortSelect.value);
             
+            // Сохраняем позицию скролла
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+            
             // Перенаправляем на новый URL
             window.location.href = currentUrl.toString();
         }
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Восстанавливаем позицию при загрузке страницы
+    const savedPosition = sessionStorage.getItem('scrollPosition');
+    if (savedPosition) {
+        window.scrollTo(0, parseInt(savedPosition));
+        sessionStorage.removeItem('scrollPosition');
+    }
+});
+
+// Сохраняем позицию перед отправкой формы
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+});
+
+// Также сохраняем позицию для ссылок, которые могут обновить страницу
+document.querySelectorAll('a[href*="sort"]').forEach(link => {
+    link.addEventListener('click', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+});
+</script>
 </x-app-layout>
