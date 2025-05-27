@@ -15,7 +15,6 @@
     </div>
 </x-slot>
 
-
 <div class="py-12">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
 
@@ -89,9 +88,12 @@
                                 $firstItem = $cartItems->first();
                                 $status = $firstItem->status ?? 'нет статуса';
                                 $isCancelled = mb_strtolower($status) === 'отменён';
-                                $isVerified = $firstItem->is_verified;
-                                $canVerify = mb_strtolower($status) === 'принят в работу';
                                 $createdAt = $firstItem->created_at ? $firstItem->created_at->format('d.m.Y H:i') : 'нет даты';
+                                
+                                // Определяем состояния кнопок на основе статуса
+                                $isInProcessing = mb_strtolower($status) === 'в обработке';
+                                $isInWork = mb_strtolower($status) === 'принят в работу';
+                                $isReady = mb_strtolower($status) === 'готов к выдаче';
                             @endphp
                             
                             <h3 class="font-semibold flex justify-between items-center">
@@ -101,31 +103,33 @@
                                 </span>
                                 <span class="w-78 text-right whitespace-nowrap">Статус: {{ $status }}</span>
                             </h3>                            
-                                <style>
-                                    .approved-row {
-                                        background-color:rgb(44, 235, 136); /* светло-зелёный фон */
-                                    }
-                                </style>
+                            
+                            <style>
+                                .approved-row {
+                                    background-color:rgb(44, 235, 136); /* светло-зелёный фон */
+                                }
+                            </style>
 
-                                <table class="w-full mt-4">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-left">Учебник</th>
-                                            <th class="text-left">Количество</th>
+                            <table class="w-full mt-4">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Учебник</th>
+                                        <th class="text-left">Количество</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($cartItems as $cartItem)
+                                        @php
+                                            $isApproved = $cartItem->book->approved == 1;
+                                        @endphp
+                                        <tr class="{{ $isApproved ? 'approved-row' : '' }}">
+                                            <td>{{ $cartItem->book->caption }}</td>
+                                            <td>{{ $cartItem->quantity }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($cartItems as $cartItem)
-                                            @php
-                                                $isApproved = $cartItem->book->approved == 1;
-                                            @endphp
-                                            <tr class="{{ $isApproved ? 'approved-row' : '' }}">
-                                                <td>{{ $cartItem->book->caption }}</td>
-                                                <td>{{ $cartItem->quantity }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            
                             <div class="mt-4 mb-4 flex items-center gap-4 justify-between order-block" data-cancelled="{{ $isCancelled ? '1' : '0' }}">
                                 <div class="flex items-center gap-4 order-action-group">
                                     <a href="{{ route('order.download', [$orderData['userid'], $orderData['ordernum']]) }}"
@@ -137,57 +141,39 @@
                                         Скачать CSV
                                     </a>
 
-                                    @if ($cartItems->first()->is_verified)
-                                        <div class="m-3 px-4 py-2 font-semibold rounded shadow text-green-600 w-[190px] text-center select-none">
+                                    {{-- Кнопка "Принять в работу" / "Убрать из работы" / "Заказ готов" --}}
+                                    @if ($isReady)
+                                        <div class="m-3 px-4 py-2 font-semibold rounded shadow bg-green-500 text-white w-[190px] text-center select-none cursor-not-allowed opacity-70">
                                             Заказ готов
                                         </div>
                                     @else
                                         <form method="POST" action="{{ route('admin.order.toggleStatus', [$orderData['userid'], $orderData['ordernum']]) }}">
                                             @csrf
                                             <button type="submit"
-                                                class="px-4 py-2 font-semibold rounded shadow text-white w-[190px]"
-                                                style="background-color: {{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}"
-                                                onmouseover="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#b91c1c' : '#1d4ed8' }}'"
-                                                onmouseout="this.style.backgroundColor='{{ $cartItems->first()->status === 'Принят в работу' ? '#dc2626' : '#2563eb' }}'"
+                                                class="px-4 py-2 font-semibold rounded shadow text-white w-[190px] hover:opacity-90 transition-opacity"
+                                                style="background-color: {{ $isInWork ? '#dc2626' : '#2563eb' }}"
                                             >
-                                                {{ $cartItems->first()->status === 'Принят в работу' ? 'Убрать из работы' : 'Принять в работу' }}
+                                                {{ $isInWork ? 'Убрать из работы' : 'Принять в работу' }}
                                             </button>
                                         </form>
                                     @endif
 
-                                    @php
-                                        $firstItem = $cartItems->first();
-                                        $isVerified = $firstItem->is_verified;
-                                        $status = mb_strtolower($firstItem->status);
-                                        $canVerify = $status === 'принят в работу';
-                                    @endphp
-
-                                    <form method="POST" action="{{ route('admin.order.toggleVerification', [$orderData['userid'], $orderData['ordernum']]) }}">
-                                        @csrf
-                                        <button type="submit"
-                                            {{ (!$isVerified && !$canVerify) ? 'disabled' : '' }}
-                                            class="px-4 py-2 font-semibold rounded shadow text-white w-[190px]"
-                                            style="
-                                                cursor: {{ (!$isVerified && !$canVerify) ? 'not-allowed' : 'pointer' }};
-                                                background-color: {{
-                                                    $isVerified
-                                                        ? '#dc2626'
-                                                        : ($canVerify ? '#16a34a' : '#9ca3af')
-                                                }};
-                                            "
-                                            onmouseover="
-                                                if (!this.disabled) {
-                                                    this.style.backgroundColor = '{{ $isVerified ? '#b91c1c' : '#15803d' }}';
-                                                }
-                                            "
-                                            onmouseout="
-                                                this.style.backgroundColor = '{{ $isVerified ? '#dc2626' : ($canVerify ? '#16a34a' : '#9ca3af') }}';
-                                            "
-                                            title="{{ (!$isVerified && !$canVerify) ? 'Можно верифицировать только после принятия в работу' : '' }}"
-                                        >
-                                            {{ $isVerified ? 'Снять верификацию' : 'Верифицировать' }}
-                                        </button>
-                                    </form>
+                                    {{-- Кнопка "Верифицировать" / "Снять верификацию" --}}
+                                    @if ($isInProcessing)
+                                        <div class="px-4 py-2 font-semibold rounded shadow bg-gray-400 text-white w-[190px] text-center cursor-not-allowed opacity-70">
+                                            Верифицировать
+                                        </div>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.order.toggleVerification', [$orderData['userid'], $orderData['ordernum']]) }}">
+                                            @csrf
+                                            <button type="submit"
+                                                class="px-4 py-2 font-semibold rounded shadow text-white w-[190px] hover:opacity-90 transition-opacity"
+                                                style="background-color: {{ $isReady ? '#dc2626' : '#16a34a' }}"
+                                            >
+                                                {{ $isReady ? 'Снять верификацию' : 'Верифицировать' }}
+                                            </button>
+                                        </form>
+                                    @endif
                                     
                                     <button
                                         type="button"
@@ -216,46 +202,45 @@
     </div>
 
     <script>
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.order-block').forEach(block => {
-        if (block.dataset.cancelled === '1') {
-            disableButtonsInBlock(block);
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.order-block').forEach(block => {
+                if (block.dataset.cancelled === '1') {
+                    disableButtonsInBlock(block);
+                }
+            });
+        });
+
+        function disableButtonsInBlock(orderBlock) {
+            const buttons = orderBlock.querySelectorAll('button, a');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+            });
         }
-    });
-});
 
-function disableButtonsInBlock(orderBlock) {
-    const buttons = orderBlock.querySelectorAll('button, a');
-    buttons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-}
+        function disableOrderActions(event, button) {
+            event.preventDefault(); // чтобы форма не отправлялась сразу
 
-function disableOrderActions(event, button) {
-    event.preventDefault(); // чтобы форма не отправлялась сразу
+            // Находим родительский блок заказа (order-block)
+            const orderBlock = button.closest('.order-block');
 
-    // Находим родительский блок заказа (order-block)
-    const orderBlock = button.closest('.order-block');
+            // Отключаем кнопки в блоке
+            disableButtonsInBlock(orderBlock);
 
-    // Отключаем кнопки в блоке
-    disableButtonsInBlock(orderBlock);
+            // Отправляем форму вручную через JS (после отключения кнопок)
+            button.closest('form').submit();
+        }
 
-    // Отправляем форму вручную через JS (после отключения кнопок)
-    button.closest('form').submit();
-}
-
-function handleSortChange() {
-    const sortSelect = document.getElementById('sort');
-    const currentUrl = new URL(window.location.href);
-    
-    // Обновляем параметр sort в URL
-    currentUrl.searchParams.set('sort', sortSelect.value);
-    
-    // Перенаправляем на новый URL
-    window.location.href = currentUrl.toString();
-}
-
+        function handleSortChange() {
+            const sortSelect = document.getElementById('sort');
+            const currentUrl = new URL(window.location.href);
+            
+            // Обновляем параметр sort в URL
+            currentUrl.searchParams.set('sort', sortSelect.value);
+            
+            // Перенаправляем на новый URL
+            window.location.href = currentUrl.toString();
+        }
     </script>
 </x-app-layout>
