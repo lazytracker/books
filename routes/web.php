@@ -26,6 +26,10 @@ use App\Http\Controllers\TestController;
 
 Route::get('/test', [TestController::class, 'index']);
 
+Route::get('/contacts', function () {
+    return view('contacts.index');
+})->name('contacts');
+
 // Главная страница теперь показывает список книг
 Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 'toggleVerification'])
     ->name('admin.order.toggleVerification');
