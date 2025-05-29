@@ -262,11 +262,11 @@ function handleStatusFilterChange(filterValue) {
 
 function applyStatusFilter(filterValue) {
     const orderCards = document.querySelectorAll('.order-card');
-    
+
     orderCards.forEach(card => {
         const status = card.dataset.status;
         let shouldShow = true;
-        
+
         switch (filterValue) {
             case 'processing':
                 shouldShow = status === 'в обработке';
@@ -282,18 +282,13 @@ function applyStatusFilter(filterValue) {
                 break;
             case 'all':
             default:
-                shouldShow = true;
+                shouldShow = status !== 'отменён'; // <-- скрываем отменённые
                 break;
         }
-        
-        if (shouldShow) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
+
+        card.style.display = shouldShow ? 'block' : 'none';
     });
 }
-
 function disableButtonsInBlock(orderBlock) {
     const buttons = orderBlock.querySelectorAll('button, a');
     buttons.forEach(btn => {
