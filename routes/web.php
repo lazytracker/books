@@ -6,6 +6,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CommandController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ClientsController; // Добавляем импорт
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SearchController;
 
@@ -95,14 +96,13 @@ Route::middleware('auth')->group(function () {
 	
 });
 
-/*
-Route::middleware(['auth', 'checkAdmin'])->group(function () {
-    Route::get('/command', [CommandController::class, 'index']);
-});
-*/
+// Маршруты для администратора
 Route::middleware(['auth', 'checkAdmin'])->group(function () {
     Route::get('/command', [CommandController::class, 'index'])->name('command.index');
+    
+    // Маршруты для управления клиентами
+    Route::get('/clients', [ClientsController::class, 'index'])->name('clients.index');
+    Route::post('/clients/{user}/toggle-verification', [ClientsController::class, 'toggleVerification'])->name('clients.toggle-verification');
 });
-
 
 require __DIR__.'/auth.php';

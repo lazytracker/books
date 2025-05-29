@@ -59,13 +59,24 @@
                                     $isReady = mb_strtolower($status) === 'готов к выдаче';
                                 @endphp
                                 
-                                <h3 class="font-semibold flex justify-between items-center">
-                                    <span>
-                                        Заказ № {{ $orderData['ordernum'] }} от <span class="mx-2">{{ $createdAt }}</span>
-                                        <span class="ml-4 text-blue-600">Пользователь: {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})</span>
-                                    </span>
-                                    <span class="w-78 text-right whitespace-nowrap">Статус: {{ $status }}</span>
-                                </h3>                            
+<h3 class="font-semibold flex items-center" style="white-space: nowrap;">
+  <span style="display: inline-flex; align-items: center;">
+    Заказ № {{ $orderData['ordernum'] }} от 
+    <span style="margin: 0 8px;">{{ $createdAt }}</span>
+    Пользователь:&nbsp;
+    @if($orderData['user']->user_verified_at)
+      <svg style="color: green; vertical-align: middle; margin: 0 6px;" fill="none" stroke="green" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" >
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+    @endif
+    {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})
+  </span>
+  <span style="margin-left: auto; white-space: nowrap;">
+    Статус: {{ $status }}
+  </span>
+</h3>
+
+                         
                                 
                                 <style>
                                     .approved-row {
