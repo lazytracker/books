@@ -26,8 +26,8 @@
             <div class="flex items-center space-x-2">
                 <label for="sort" class="font-semibold text-gray-700">Сортировка:</label>
                 <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" onchange="handleSortChange()">
-                    <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>По номеру заказа (убывание)</option>    
-                    <option value="asc" {{ request('sort') == 'asc' ? 'selected' : '' }}>По номеру заказа (возрастание)</option>
+                    <option value="desc">По номеру заказа (убывание)</option>    
+                    <option value="asc">По номеру заказа (возрастание)</option>
                 </select>
             </div>
         </div>
@@ -224,8 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
         filterRadio.checked = true;
     }
     
-    // Применяем фильтр при загрузке страницы
+    // Восстанавливаем сохраненную сортировку
+    const savedSort = localStorage.getItem('orderSort') || 'desc';
+    const sortSelect = document.getElementById('sort');
+    if (sortSelect) {
+        sortSelect.value = savedSort;
+    }
+    
+    // Применяем фильтр и сортировку при загрузке страницы
     applyStatusFilter(savedFilter);
+    applySorting(savedSort);
 
     // Добавляем обработчики событий для фильтров
     document.querySelectorAll('.status-filter').forEach(radio => {
@@ -310,16 +318,35 @@ function disableOrderActions(event, button) {
 
 function handleSortChange() {
     const sortSelect = document.getElementById('sort');
-    const currentUrl = new URL(window.location.href);
+    const sortValue = sortSelect.value;
     
-    // Обновляем параметр sort в URL
-    currentUrl.searchParams.set('sort', sortSelect.value);
+    // Сохраняем сортировку в localStorage
+    localStorage.setItem('orderSort', sortValue);
     
-    // Сохраняем позицию скролла
-    sessionStorage.setItem('scrollPosition', window.scrollY);
+    // Применяем сортировку без перезагрузки страницы
+    applySorting(sortValue);
+}
+
+function applySorting(sortValue) {
+    const orderContainer = document.querySelector('.flex.flex-col.items-center');
+    const orderCards = Array.from(orderContainer.querySelectorAll('.order-card'));
     
-    // Перенаправляем на новый URL
-    window.location.href = currentUrl.toString();
+    // Сортируем карточки по номеру заказа
+    orderCards.sort((a, b) => {
+        const orderNumA = parseInt(a.dataset.ordernum);
+        const orderNumB = parseInt(b.dataset.ordernum);
+        
+        if (sortValue === 'asc') {
+            return orderNumA - orderNumB;
+        } else {
+            return orderNumB - orderNumA;
+        }
+    });
+    
+    // Перемещаем отсортированные элементы в DOM
+    orderCards.forEach(card => {
+        orderContainer.appendChild(card);
+    });
 }
 
 // Восстанавливаем позицию при загрузке страницы
@@ -334,13 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Сохраняем позицию перед отправкой формы
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function() {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-    });
-});
-
-// Также сохраняем позицию для ссылок, которые могут обновить страницу
-document.querySelectorAll('a[href*="sort"]').forEach(link => {
-    link.addEventListener('click', function() {
         sessionStorage.setItem('scrollPosition', window.scrollY);
     });
 });
