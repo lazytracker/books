@@ -31,6 +31,9 @@
                         <x-nav-link :href="route('command.index')" :active="request()->routeIs('command.index')">
                             {{ __('Все заказы') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.index')">
+                            {{ __('Клиенты') }}
+                        </x-nav-link>
                         @endif
                     @endauth
                 <x-nav-link :href="route('contacts')" :active="request()->routeIs('contacts')">
@@ -110,6 +113,14 @@
                 <x-responsive-nav-link :href="route('cart.index')" :active="request()->routeIs('cart.index')">
                     {{ __('Корзина') }}
                 </x-responsive-nav-link>
+                @if (Auth::user()->role === 'admin')
+                <x-responsive-nav-link :href="route('command.index')" :active="request()->routeIs('command.index')">
+                    {{ __('Все заказы') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.index')">
+                    {{ __('Клиенты') }}
+                </x-responsive-nav-link>
+                @endif
             @endauth
         </div>
 
