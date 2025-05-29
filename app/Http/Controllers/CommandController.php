@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -174,7 +175,10 @@ class CommandController extends Controller
                 'items' => $orders // Все элементы заказа
             ];
         });
+
+        // Получаем всех пользователей для выпадающего меню
+        $users = User::orderBy('name')->get();
        
-        return view('command/command', compact('groupedCartItems'));
+        return view('command/command', compact('groupedCartItems', 'users'));
     }
 }
