@@ -93,6 +93,72 @@ class CommandController extends Controller
         return redirect()->back()->with('success', "Заказ #{$orderNum} {$actionText}");
     }
 
+    public function cancelOrder($userId, $orderNum)
+    {
+        // Получаем текущий статус из базы
+        $firstOrder = DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->first();
+            
+        if (!$firstOrder) {
+            return redirect()->back()->with('error', 'Заказ не найден');
+        }
+        
+        $currentStatus = $firstOrder->status;
+        
+        // Проверяем, можно ли отменить заказ
+        if ($currentStatus === 'Отменён') {
+            return redirect()->back()->with('error', 'Заказ уже отменён');
+        }
+        
+        // Отменяем заказ
+        DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->update([
+                'status' => 'Отменён',
+                'is_verified' => 0,
+                'verified_at' => null,
+                'updated_at' => now()
+            ]);
+            
+        return redirect()->back()->with('success', "Заказ #{$orderNum} отменён");
+    }
+
+    public function restoreOrder($userId, $orderNum)
+    {
+        // Получаем текущий статус из базы
+        $firstOrder = DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->first();
+            
+        if (!$firstOrder) {
+            return redirect()->back()->with('error', 'Заказ не найден');
+        }
+        
+        $currentStatus = $firstOrder->status;
+        
+        // Проверяем, можно ли восстановить заказ
+        if ($currentStatus !== 'Отменён') {
+            return redirect()->back()->with('error', 'Можно восстановить только отменённые заказы');
+        }
+        
+        // Восстанавливаем заказ в статус "в обработке"
+        DB::table('orders')
+            ->where('userid', $userId)
+            ->where('ordernum', $orderNum)
+            ->update([
+                'status' => 'в обработке',
+                'is_verified' => 0,
+                'verified_at' => null,
+                'updated_at' => now()
+            ]);
+            
+        return redirect()->back()->with('success', "Заказ #{$orderNum} возвращён в работу");
+    }
+
     public function index(Request $request)
     {
         // Get all orders with their associated book and user details
