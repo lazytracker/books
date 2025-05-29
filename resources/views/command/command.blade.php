@@ -41,7 +41,11 @@
                 @else
                     <div class="flex flex-col items-center">
                         @foreach($groupedCartItems as $orderData)
-                            <div class="customCard w-full max-w-7xl m-3 p-4 border rounded shadow">
+                            <div class="customCard order-card w-full max-w-7xl m-3 p-4 border rounded shadow" 
+                                 data-status="{{ mb_strtolower($orderData['items']->first()->status ?? '') }}"
+                                 data-ordernum="{{ $orderData['ordernum'] }}"
+                                 data-user="{{ $orderData['user']->name ?? '' }}"
+                                 data-userid="{{ $orderData['userid'] }}">
                                 @php
                                     $cartItems = $orderData['items'];
                                     $firstItem = $cartItems->first();
@@ -65,7 +69,7 @@
                                 
                                 <style>
                                     .approved-row {
-                                        background-color:rgb(44, 235, 136); /* светло-зелёный фон */
+                                        background-color:rgb(44, 235, 156); /* светло-зелёный фон */
                                     }
                                 </style>
 
@@ -102,15 +106,15 @@
 
                                         {{-- Кнопка "Принять в работу" / "Убрать из работы" / "Заказ готов" --}}
                                         @if ($isReady)
-                                            <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white w-44 text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 136px;">
+                                            <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 156px;">
                                                 Заказ готов
                                             </div>
                                         @else
                                             <form method="POST" action="{{ route('admin.order.toggleStatus', [$orderData['userid'], $orderData['ordernum']]) }}">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="px-3 py-2 font-semibold rounded shadow text-white w-44 hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
-                                                    style="background-color: {{ $isInWork ? '#dc2626' : '#2563eb' }}"
+                                                    class="px-3 py-2 font-semibold rounded shadow text-white hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
+                                                    style="background-color: {{ $isInWork ? '#dc2626' : '#2563eb' }}; width: 156px;"
                                                 >
                                                     {{ $isInWork ? 'Убрать из работы' : 'Принять в работу' }}
                                                 </button>
@@ -119,15 +123,15 @@
 
                                         {{-- Кнопка "Верифицировать" / "Снять верификацию" --}}
                                         @if ($isInProcessing)
-                                            <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white w-44 text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 136px;">
+                                            <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 156px;">
                                                 Верифицировать
                                             </div>
                                         @else
                                             <form method="POST" action="{{ route('admin.order.toggleVerification', [$orderData['userid'], $orderData['ordernum']]) }}">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="px-3 py-2 font-semibold rounded shadow text-white w-44 hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
-                                                    style="background-color: {{ $isReady ? '#dc2626' : '#16a34a' }}"
+                                                    class="px-3 py-2 font-semibold rounded shadow text-white hover:opacity-90 transition-opacity text-sm whitespace-nowrap"
+                                                    style="background-color: {{ $isReady ? '#dc2626' : '#16a34a' }}; width: 156px;"
                                                 >
                                                     {{ $isReady ? 'Снять верификацию' : 'Верифицировать' }}
                                                 </button>
@@ -167,23 +171,23 @@
                     <form>
                         <div class="flex flex-col space-y-2">
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio status-filter" value="all" {{ request('status_filter', 'all') == 'all' ? 'checked' : '' }} />
+                                <input type="radio" name="status_filter" class="form-radio status-filter" value="all" />
                                 <span class="ml-2">Все</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio status-filter" value="processing" {{ request('status_filter') == 'processing' ? 'checked' : '' }} />
+                                <input type="radio" name="status_filter" class="form-radio status-filter" value="processing" />
                                 <span class="ml-2">В обработке</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio status-filter" value="accepted" {{ request('status_filter') == 'accepted' ? 'checked' : '' }} />
+                                <input type="radio" name="status_filter" class="form-radio status-filter" value="accepted" />
                                 <span class="ml-2">Принятые в работу</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio status-filter" value="ready" {{ request('status_filter') == 'ready' ? 'checked' : '' }} />
+                                <input type="radio" name="status_filter" class="form-radio status-filter" value="ready" />
                                 <span class="ml-2">Готовые к выдаче</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="filter1" class="form-radio status-filter" value="cancelled" {{ request('status_filter') == 'cancelled' ? 'checked' : '' }} />
+                                <input type="radio" name="status_filter" class="form-radio status-filter" value="cancelled" />
                                 <span class="ml-2">Отменённые</span>
                             </label>
                         </div>
@@ -211,92 +215,115 @@
     </div>
 </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Восстанавливаем фильтр из localStorage
-            const savedFilter = localStorage.getItem('orderStatusFilter');
-            if (savedFilter) {
-                const filterRadio = document.querySelector(`.status-filter[value="${savedFilter}"]`);
-                if (filterRadio) {
-                    filterRadio.checked = true;
-                }
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Восстанавливаем сохраненный фильтр
+    const savedFilter = localStorage.getItem('orderStatusFilter') || 'all';
+    const filterRadio = document.querySelector(`.status-filter[value="${savedFilter}"]`);
+    if (filterRadio) {
+        filterRadio.checked = true;
+    }
+    
+    // Применяем фильтр при загрузке страницы
+    applyStatusFilter(savedFilter);
+
+    // Добавляем обработчики событий для фильтров
+    document.querySelectorAll('.status-filter').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                handleStatusFilterChange(this.value);
             }
-
-            // Добавляем обработчики событий для фильтров
-            document.querySelectorAll('.status-filter').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        handleStatusFilterChange(this.value);
-                    }
-                });
-            });
-
-            document.querySelectorAll('.order-block').forEach(block => {
-                if (block.dataset.cancelled === '1') {
-                    disableButtonsInBlock(block);
-                }
-            });
         });
+    });
 
-        function handleStatusFilterChange(filterValue) {
-            // Сохраняем фильтр в localStorage
-            localStorage.setItem('orderStatusFilter', filterValue);
-            
-            const currentUrl = new URL(window.location.href);
-            
-            // Обновляем параметр status_filter в URL
-            if (filterValue === 'all') {
-                currentUrl.searchParams.delete('status_filter');
-            } else {
-                currentUrl.searchParams.set('status_filter', filterValue);
-            }
-            
-            // Сохраняем позицию скролла
-            sessionStorage.setItem('scrollPosition', window.scrollY);
-            
-            // Перенаправляем на новый URL
-            window.location.href = currentUrl.toString();
+    // Обрабатываем отмененные заказы
+    document.querySelectorAll('.order-block').forEach(block => {
+        if (block.dataset.cancelled === '1') {
+            disableButtonsInBlock(block);
         }
+    });
+});
 
-        function disableButtonsInBlock(orderBlock) {
-            const buttons = orderBlock.querySelectorAll('button, a');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.5';
-            });
+function handleStatusFilterChange(filterValue) {
+    // Сохраняем фильтр в localStorage
+    localStorage.setItem('orderStatusFilter', filterValue);
+    
+    // Применяем фильтр без перезагрузки страницы
+    applyStatusFilter(filterValue);
+}
+
+function applyStatusFilter(filterValue) {
+    const orderCards = document.querySelectorAll('.order-card');
+    
+    orderCards.forEach(card => {
+        const status = card.dataset.status;
+        let shouldShow = true;
+        
+        switch (filterValue) {
+            case 'processing':
+                shouldShow = status === 'в обработке';
+                break;
+            case 'accepted':
+                shouldShow = status === 'принят в работу';
+                break;
+            case 'ready':
+                shouldShow = status === 'готов к выдаче';
+                break;
+            case 'cancelled':
+                shouldShow = status === 'отменён';
+                break;
+            case 'all':
+            default:
+                shouldShow = true;
+                break;
         }
-
-        function disableOrderActions(event, button) {
-            event.preventDefault(); // чтобы форма не отправлялась сразу
-
-            // Находим родительский блок заказа (order-block)
-            const orderBlock = button.closest('.order-block');
-
-            // Отключаем кнопки в блоке
-            disableButtonsInBlock(orderBlock);
-
-            // Отправляем форму вручную через JS (после отключения кнопок)
-            button.closest('form').submit();
+        
+        if (shouldShow) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
         }
+    });
+}
 
-        function handleSortChange() {
-            const sortSelect = document.getElementById('sort');
-            const currentUrl = new URL(window.location.href);
-            
-            // Обновляем параметр sort в URL
-            currentUrl.searchParams.set('sort', sortSelect.value);
-            
-            // Сохраняем позицию скролла
-            sessionStorage.setItem('scrollPosition', window.scrollY);
-            
-            // Перенаправляем на новый URL
-            window.location.href = currentUrl.toString();
-        }
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Восстанавливаем позицию при загрузке страницы
+function disableButtonsInBlock(orderBlock) {
+    const buttons = orderBlock.querySelectorAll('button, a');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    });
+}
+
+function disableOrderActions(event, button) {
+    event.preventDefault(); // чтобы форма не отправлялась сразу
+
+    // Находим родительский блок заказа (order-block)
+    const orderBlock = button.closest('.order-block');
+
+    // Отключаем кнопки в блоке
+    disableButtonsInBlock(orderBlock);
+
+    // Отправляем форму вручную через JS (после отключения кнопок)
+    button.closest('form').submit();
+}
+
+function handleSortChange() {
+    const sortSelect = document.getElementById('sort');
+    const currentUrl = new URL(window.location.href);
+    
+    // Обновляем параметр sort в URL
+    currentUrl.searchParams.set('sort', sortSelect.value);
+    
+    // Сохраняем позицию скролла
+    sessionStorage.setItem('scrollPosition', window.scrollY);
+    
+    // Перенаправляем на новый URL
+    window.location.href = currentUrl.toString();
+}
+
+// Восстанавливаем позицию при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
     const savedPosition = sessionStorage.getItem('scrollPosition');
     if (savedPosition) {
         window.scrollTo(0, parseInt(savedPosition));
