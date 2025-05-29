@@ -108,15 +108,6 @@ class CommandController extends Controller
                 'items' => $orders // Все элементы заказа
             ];
         });
-
-        // Apply sorting based on request parameter
-        $sort = $request->get('sort', 'desc'); // Default to descending
-        
-        if ($sort === 'desc') {
-            $groupedCartItems = $groupedCartItems->sortByDesc('ordernum');
-        } else {
-            $groupedCartItems = $groupedCartItems->sortBy('ordernum');
-        }
        
         return view('command/command', compact('groupedCartItems'));
     }
