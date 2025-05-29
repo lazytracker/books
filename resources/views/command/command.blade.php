@@ -233,7 +233,7 @@
                 <div>
                     <div class="font-semibold text-gray-700 mb-3">Клиенты</div>
                     <form>
-                        <div class="flex flex-col space-y-2">
+                        <div class="flex flex-col space-y-2 mb-4">
                             <label class="inline-flex items-center">
                                 <input type="radio" name="filter2" class="form-radio" value="optionA" />
                                 <span class="ml-2">Активные клиенты</span>
@@ -242,6 +242,17 @@
                                 <input type="radio" name="filter2" class="form-radio" value="optionB" />
                                 <span class="ml-2">Все</span>
                             </label>
+                        </div>
+                        
+                        {{-- Выпадающее меню с пользователями --}}
+                        <div class="mt-3">
+                            <label for="user_filter" class="block text-sm font-medium text-gray-700 mb-2">Выберите клиента:</label>
+                            <select id="user_filter" name="user_filter" class="w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" onchange="handleUserFilterChange()">
+                                <option value="all">Все клиенты</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }} (ID: {{ $user->id }})</option>
+                                @endforeach
+                            </select>
                         </div>
                     </form>
                 </div>
@@ -252,11 +263,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Восстанавливаем сохраненный фильтр
+    // Восстанавливаем сохраненный фильтр статуса
     const savedFilter = localStorage.getItem('orderStatusFilter') || 'all';
     const filterRadio = document.querySelector(`.status-filter[value="${savedFilter}"]`);
     if (filterRadio) {
         filterRadio.checked = true;
+    }
+    
+    // Восстанавливаем сохраненный фильтр пользователя
+    const savedUserFilter = localStorage.getItem('orderUserFilter') || 'all';
+    const userSelect = document.getElementById('user_filter');
+    if (userSelect) {
+        userSelect.value = savedUserFilter;
     }
     
     // Восстанавливаем сохраненную сортировку
@@ -266,11 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
         sortSelect.value = savedSort;
     }
     
-    // Применяем фильтр и сортировку при загрузке страницы
-    applyStatusFilter(savedFilter);
+    // Применяем фильтры и сортировку при загрузке страницы
+    applyFilters();
     applySorting(savedSort);
 
-    // Добавляем обработчики событий для фильтров
+    // Добавляем обработчики событий для фильтров статуса
     document.querySelectorAll('.status-filter').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
@@ -284,34 +302,54 @@ function handleStatusFilterChange(filterValue) {
     // Сохраняем фильтр в localStorage
     localStorage.setItem('orderStatusFilter', filterValue);
     
-    // Применяем фильтр без перезагрузки страницы
-    applyStatusFilter(filterValue);
+    // Применяем фильтры без перезагрузки страницы
+    applyFilters();
 }
 
-function applyStatusFilter(filterValue) {
+function handleUserFilterChange() {
+    const userSelect = document.getElementById('user_filter');
+    const selectedUserId = userSelect.value;
+    
+    // Сохраняем фильтр пользователя в localStorage
+    localStorage.setItem('orderUserFilter', selectedUserId);
+    
+    // Применяем фильтры без перезагрузки страницы
+    applyFilters();
+}
+
+function applyFilters() {
+    const statusFilter = localStorage.getItem('orderStatusFilter') || 'all';
+    const userFilter = localStorage.getItem('orderUserFilter') || 'all';
     const orderCards = document.querySelectorAll('.order-card');
 
     orderCards.forEach(card => {
         const status = card.dataset.status;
+        const userId = card.dataset.userid;
         let shouldShow = true;
 
-        switch (filterValue) {
+        // Применяем фильтр по статусу
+        switch (statusFilter) {
             case 'processing':
-                shouldShow = status === 'в обработке';
+                shouldShow = shouldShow && status === 'в обработке';
                 break;
             case 'accepted':
-                shouldShow = status === 'принят в работу';
+                shouldShow = shouldShow && status === 'принят в работу';
                 break;
             case 'ready':
-                shouldShow = status === 'готов к выдаче';
+                shouldShow = shouldShow && status === 'готов к выдаче';
                 break;
             case 'cancelled':
-                shouldShow = status === 'отменён';
+                shouldShow = shouldShow && status === 'отменён';
                 break;
             case 'all':
             default:
-                shouldShow = status !== 'отменён'; // <-- скрываем отменённые
+                shouldShow = shouldShow && status !== 'отменён'; // скрываем отменённые
                 break;
+        }
+
+        // Применяем фильтр по пользователю
+        if (userFilter !== 'all') {
+            shouldShow = shouldShow && userId === userFilter;
         }
 
         card.style.display = shouldShow ? 'block' : 'none';
