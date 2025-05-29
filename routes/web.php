@@ -36,6 +36,10 @@ Route::post('/admin/order/{userId}/{orderNum}/verify', [OrderController::class, 
 
     Route::post('/admin/orders/{userId}/{orderNum}/cancel', [OrderController::class, 'cancel'])
     ->name('admin.order.cancel');
+    Route::post('/admin/order/cancel/{userId}/{orderNum}', [CommandController::class, 'cancelOrder'])
+    ->name('admin.order.cancel');
+Route::post('/admin/order/restore/{userId}/{orderNum}', [CommandController::class, 'restoreOrder'])
+    ->name('admin.order.restore');
 Route::post('/admin/order/{userId}/{orderNum}/toggle-verification', [CommandController::class, 'toggleVerification'])
     ->name('admin.order.toggleVerification');
 

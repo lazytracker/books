@@ -95,17 +95,30 @@
                                 
                                 <div class="mt-4 mb-4 flex items-center gap-2 justify-between order-block" data-cancelled="{{ $isCancelled ? '1' : '0' }}">
                                     <div class="flex items-center gap-2 order-action-group flex-wrap">
-                                        <a href="{{ route('order.download', [$orderData['userid'], $orderData['ordernum']]) }}"
-                                        class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap">
-                                            Скачать
-                                        </a>
-                                        <a href="{{ url('/download-csv?ordernum=' . $orderData['ordernum']) }}"
-                                        class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap">
-                                            Скачать CSV
-                                        </a>
+                                        @if ($isCancelled)
+                                            <div class="bg-gray-400 text-white font-semibold py-2 px-3 rounded shadow w-44 text-center text-sm whitespace-nowrap opacity-50 cursor-not-allowed">
+                                                Скачать
+                                            </div>
+                                            <div class="bg-gray-400 text-white font-semibold py-2 px-3 rounded shadow w-44 text-center text-sm whitespace-nowrap opacity-50 cursor-not-allowed">
+                                                Скачать CSV
+                                            </div>
+                                        @else
+                                            <a href="{{ route('order.download', [$orderData['userid'], $orderData['ordernum']]) }}"
+                                            class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap">
+                                                Скачать
+                                            </a>
+                                            <a href="{{ url('/download-csv?ordernum=' . $orderData['ordernum']) }}"
+                                            class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap">
+                                                Скачать CSV
+                                            </a>
+                                        @endif
 
                                         {{-- Кнопка "Принять в работу" / "Убрать из работы" / "Заказ готов" --}}
-                                        @if ($isReady)
+                                        @if ($isCancelled)
+                                            <div class="px-3 py-2 font-semibold rounded shadow bg-gray-400 text-white text-center cursor-not-allowed opacity-50 text-sm whitespace-nowrap inline-block" style="width: 156px;">
+                                                {{ $isReady ? 'Заказ готов' : ($isInWork ? 'Убрать из работы' : 'Принять в работу') }}
+                                            </div>
+                                        @elseif ($isReady)
                                             <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 156px;">
                                                 Заказ готов
                                             </div>
@@ -122,7 +135,11 @@
                                         @endif
 
                                         {{-- Кнопка "Верифицировать" / "Снять верификацию" --}}
-                                        @if ($isInProcessing)
+                                        @if ($isCancelled)
+                                            <div class="px-3 py-2 font-semibold rounded shadow bg-gray-400 text-white text-center cursor-not-allowed opacity-50 text-sm whitespace-nowrap inline-block" style="width: 156px;">
+                                                {{ $isReady ? 'Снять верификацию' : 'Верифицировать' }}
+                                            </div>
+                                        @elseif ($isInProcessing)
                                             <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 156px;">
                                                 Верифицировать
                                             </div>
@@ -138,24 +155,42 @@
                                             </form>
                                         @endif
                                         
-                                        <button
-                                            type="button"
-                                            class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap"
-                                        >
-                                            Передать в ИРБИС
-                                        </button>
+                                        @if ($isCancelled)
+                                            <div class="bg-gray-400 text-white font-semibold py-2 px-3 rounded shadow w-44 text-center text-sm whitespace-nowrap opacity-50 cursor-not-allowed">
+                                                Передать в ИРБИС
+                                            </div>
+                                        @else
+                                            <button
+                                                type="button"
+                                                class="bg-blue-600 text-white font-semibold py-2 px-3 rounded shadow hover:bg-blue-700 w-44 text-center text-sm whitespace-nowrap"
+                                            >
+                                                Передать в ИРБИС
+                                            </button>
+                                        @endif
                                     </div>
-
-                                    {{-- Кнопка "Отменить заказ" справа --}}
-                                    <form method="POST" action="{{ route('admin.order.cancel', [$orderData['userid'], $orderData['ordernum']]) }}" class="cancel-form">
-                                        @csrf
-                                        <button type="submit"
-                                            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded shadow cancel-btn w-44 text-center text-sm whitespace-nowrap"
-                                            onclick="disableOrderActions(event, this)"
-                                        >
-                                            Отменить заказ
-                                        </button>
-                                    </form>
+                                        {{-- Кнопка "Отменить заказ" / "Вернуть в работу" справа --}}
+                                        @if ($isCancelled)
+                                            <form method="POST" action="{{ route('admin.order.restore', [$orderData['userid'], $orderData['ordernum']]) }}" class="restore-form">
+                                                @csrf
+                                                <button type="submit"
+                                                    style="background-color: #16a34a;" {{-- это соответствует bg-green-600 --}}
+                                                    class="hover:bg-green-700 text-white font-bold py-2 px-3 rounded shadow w-44 text-center text-sm whitespace-nowrap transition-colors"
+                                                >
+                                                    Вернуть в работу
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('admin.order.cancel', [$orderData['userid'], $orderData['ordernum']]) }}" class="cancel-form">
+                                                @csrf
+                                                <button type="submit"
+                                                    style="background-color: #dc2626;" {{-- это соответствует bg-red-600 --}}
+                                                    class="hover:bg-red-700 text-white font-bold py-2 px-3 rounded shadow cancel-btn w-44 text-center text-sm whitespace-nowrap transition-colors"
+                                                    onclick="return confirm('Вы уверены, что хотите отменить заказ?')"
+                                                >
+                                                    Отменить заказ
+                                                </button>
+                                            </form>
+                                        @endif
                                 </div>
                             </div>
                         @endforeach
@@ -243,13 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
-    // Обрабатываем отмененные заказы
-    document.querySelectorAll('.order-block').forEach(block => {
-        if (block.dataset.cancelled === '1') {
-            disableButtonsInBlock(block);
-        }
-    });
 });
 
 function handleStatusFilterChange(filterValue) {
@@ -288,27 +316,6 @@ function applyStatusFilter(filterValue) {
 
         card.style.display = shouldShow ? 'block' : 'none';
     });
-}
-function disableButtonsInBlock(orderBlock) {
-    const buttons = orderBlock.querySelectorAll('button, a');
-    buttons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-}
-
-function disableOrderActions(event, button) {
-    event.preventDefault(); // чтобы форма не отправлялась сразу
-
-    // Находим родительский блок заказа (order-block)
-    const orderBlock = button.closest('.order-block');
-
-    // Отключаем кнопки в блоке
-    disableButtonsInBlock(orderBlock);
-
-    // Отправляем форму вручную через JS (после отключения кнопок)
-    button.closest('form').submit();
 }
 
 function handleSortChange() {
