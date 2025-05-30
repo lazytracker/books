@@ -65,7 +65,7 @@
     <span style="margin: 0 8px;">{{ $createdAt }}</span>
     Пользователь:&nbsp;
     @if($orderData['user']->user_verified_at)
-      <svg style="color: green; vertical-align: middle; margin: 0 6px;" fill="none" stroke="green" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" >
+      <svg style="color: green; vertical-align: middle; margin: 0 6px;" fill="none" stroke="green" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" >
         <path d="M20 6L9 17l-5-5"/>
       </svg>
     @endif
