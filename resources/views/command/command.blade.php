@@ -6,12 +6,13 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Заказы') }}
         </h2>
-        <input
-            type="text"
-            placeholder="Данные заказчика, дата, номер заказа..."
-            class="mt-2 max-w-md rounded-md border border-gray-300 shadow-sm
-                   focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-        >
+            <input
+                id="search_input"
+                type="text"
+                placeholder="Данные заказчика, дата, номер заказа..."
+                class="mt-2 max-w-md rounded-md border border-gray-300 shadow-sm
+                    focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
     </div>
 </x-slot>
 
@@ -65,9 +66,22 @@
     <span style="margin: 0 8px;">{{ $createdAt }}</span>
     Пользователь:&nbsp;
     @if($orderData['user']->user_verified_at)
-      <svg style="color: green; vertical-align: middle; margin: 0 6px;" fill="none" stroke="green" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24" >
-        <path d="M20 6L9 17l-5-5"/>
-      </svg>
+<svg 
+    style="color: #16a34a; vertical-align: middle; margin: 0 6px;" 
+    fill="none" 
+    stroke="#16a34a" 
+    stroke-width="3" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    viewBox="0 0 24 24" 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24"
+>
+  <circle cx="12" cy="12" r="10" />
+  <path d="M9 12l2 2 4-4"/>
+</svg>
+
     @endif
     {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})
   </span>
@@ -130,7 +144,7 @@
                                                 {{ $isReady ? 'Заказ готов' : ($isInWork ? 'Убрать из работы' : 'Принять в работу') }}
                                             </div>
                                         @elseif ($isReady)
-                                            <div class="px-3 py-2 font-semibold rounded shadow bg-green-500 text-white text-center cursor-not-allowed opacity-70 text-sm whitespace-nowrap inline-block" style="width: 156px;">
+                                            <div class="px-3 py-2 font-semibold rounded shadow border border-black text-green-600 bg-white text-center cursor-not-allowed opacity-50 text-sm whitespace-nowrap inline-block" style="width: 156px;">
                                                 Заказ готов
                                             </div>
                                         @else
@@ -295,6 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sortSelect.value = savedSort;
     }
     
+    // Восстанавливаем сохраненный поисковый запрос
+    const savedSearch = localStorage.getItem('orderSearchQuery') || '';
+    const searchInput = document.querySelector('input[type="text"][placeholder*="Данные заказчика"]');
+    if (searchInput) {
+        searchInput.value = savedSearch;
+    }
+    
     // Применяем фильтры и сортировку при загрузке страницы
     applyFilters();
     applySorting(savedSort);
@@ -307,7 +328,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Добавляем обработчик для поиска
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearchInput);
+    }
 });
+
+function handleSearchInput(event) {
+    const searchQuery = event.target.value;
+    
+    // Сохраняем поисковый запрос в localStorage
+    localStorage.setItem('orderSearchQuery', searchQuery);
+    
+    // Применяем фильтры с учетом поиска
+    applyFilters();
+}
 
 function handleStatusFilterChange(filterValue) {
     // Сохраняем фильтр в localStorage
@@ -331,11 +367,19 @@ function handleUserFilterChange() {
 function applyFilters() {
     const statusFilter = localStorage.getItem('orderStatusFilter') || 'all';
     const userFilter = localStorage.getItem('orderUserFilter') || 'all';
+    const searchQuery = localStorage.getItem('orderSearchQuery') || '';
     const orderCards = document.querySelectorAll('.order-card');
 
     orderCards.forEach(card => {
         const status = card.dataset.status;
         const userId = card.dataset.userid;
+        const orderNum = card.dataset.ordernum;
+        const userName = card.dataset.user;
+        
+        // Получаем текст заголовка заказа для поиска
+        const headerElement = card.querySelector('h3');
+        const headerText = headerElement ? headerElement.textContent.trim() : '';
+        
         let shouldShow = true;
 
         // Применяем фильтр по статусу
@@ -361,6 +405,15 @@ function applyFilters() {
         // Применяем фильтр по пользователю
         if (userFilter !== 'all') {
             shouldShow = shouldShow && userId === userFilter;
+        }
+
+        // Применяем поисковый фильтр
+        if (searchQuery.trim() !== '') {
+            const searchLower = searchQuery.toLowerCase();
+            const headerLower = headerText.toLowerCase();
+            
+            // Проверяем, содержит ли заголовок поисковый запрос
+            shouldShow = shouldShow && headerLower.includes(searchLower);
         }
 
         card.style.display = shouldShow ? 'block' : 'none';
