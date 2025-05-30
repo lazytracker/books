@@ -60,38 +60,40 @@
                                     $isReady = mb_strtolower($status) === 'готов к выдаче';
                                 @endphp
                                 
-<h3 class="font-semibold flex items-center" style="white-space: nowrap;">
-  <span style="display: inline-flex; align-items: center;">
-    Заказ № {{ $orderData['ordernum'] }} от 
-    <span style="margin: 0 8px;">{{ $createdAt }}</span>
-    Пользователь:&nbsp;
-    @if($orderData['user']->user_verified_at)
-<svg 
-    style="color: #16a34a; vertical-align: middle; margin: 0 6px;" 
-    fill="none" 
-    stroke="#16a34a" 
-    stroke-width="3" 
-    stroke-linecap="round" 
-    stroke-linejoin="round" 
-    viewBox="0 0 24 24" 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24"
->
-  <circle cx="12" cy="12" r="10" />
-  <path d="M9 12l2 2 4-4"/>
-</svg>
-
-    @endif
-    {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})
-  </span>
-  <span style="margin-left: auto; white-space: nowrap;">
-    Статус: {{ $status }}
-  </span>
-</h3>
-
-                         
-                                
+                                    <h3 class="font-semibold">
+                                    <div class="flex items-center justify-between" style="white-space: nowrap;">
+                                        <span style="display: inline-flex; align-items: center;">
+                                        Заказ № {{ $orderData['ordernum'] }} от 
+                                        <span style="margin: 0 8px;">{{ $createdAt }}</span>
+                                        </span>
+                                        <span style="margin-left: auto; white-space: nowrap;">
+                                        Статус: {{ $status }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center mt-1" style="white-space: nowrap;">
+                                        <span style="display: inline-flex; align-items: center;">
+                                        Пользователь:&nbsp;
+                                        @if($orderData['user']->user_verified_at)
+                                        <svg 
+                                            style="color: #16a34a; vertical-align: middle; margin: 0 6px;" 
+                                            fill="none" 
+                                            stroke="#16a34a" 
+                                            stroke-width="3" 
+                                            stroke-linecap="round" 
+                                            stroke-linejoin="round" 
+                                            viewBox="0 0 24 24" 
+                                            xmlns="http://www.w3.org/2000/svg" 
+                                            width="24" 
+                                            height="24"
+                                        >
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9 12l2 2 4-4"/>
+                                        </svg>
+                                        @endif
+                                        {{ $orderData['user']->name }} (ID: {{ $orderData['userid'] }})
+                                        </span>
+                                    </div>
+                                    </h3>                            
                                 <style>
                                     .approved-row {
                                         background-color:rgb(44, 235, 156); /* светло-зелёный фон */
@@ -378,7 +380,7 @@ function applyFilters() {
         
         // Получаем текст заголовка заказа для поиска
         const headerElement = card.querySelector('h3');
-        const headerText = headerElement ? headerElement.textContent.trim() : '';
+        const headerText = headerElement ? headerElement.textContent.trim().replace(/\s+/g, ' ') : '';
         
         let shouldShow = true;
 
@@ -410,10 +412,15 @@ function applyFilters() {
         // Применяем поисковый фильтр
         if (searchQuery.trim() !== '') {
             const searchLower = searchQuery.toLowerCase();
-            const headerLower = headerText.toLowerCase();
             
-            // Проверяем, содержит ли заголовок поисковый запрос
-            shouldShow = shouldShow && headerLower.includes(searchLower);
+            // Исключаем общие слова из текста для поиска
+            const cleanedHeaderText = headerText
+                .replace(/заказ\s*/gi, '')
+                .replace(/пользователь:\s*/gi, '')
+                .toLowerCase();
+            
+            // Проверяем, содержит ли очищенный заголовок поисковый запрос
+            shouldShow = shouldShow && cleanedHeaderText.includes(searchLower);
         }
 
         card.style.display = shouldShow ? 'block' : 'none';
