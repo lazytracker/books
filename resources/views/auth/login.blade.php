@@ -38,7 +38,7 @@
                     {{ __('Забыли пароль?') }}
                 </a>
             @endif
-
+			<a href="{{ route('register') }}" class="text-sm text-gray-700 underline ml-3">Регистрация</a>
             <x-primary-button class="ms-3">
                 {{ __('Войти') }}
             </x-primary-button>
