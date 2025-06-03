@@ -17,6 +17,7 @@
     <div class="py-12">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Панель с классами сверху -->
+             
             <div class="mb-6">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
@@ -40,7 +41,10 @@
                     </div>
                 </div>
             </div>
-
+<div class="mb-4 flex items-center space-x-2">
+    <input type="checkbox" id="hideEmptySeqNum" checked>
+    <label for="hideEmptySeqNum" class="text-gray-700 select-none">Скрывать записи без номера ФПУ</label>
+</div>
             <div class="flex">
                 <!-- Боковое меню -->
                 <div class="w-64 mr-6">
@@ -203,11 +207,12 @@
             </div>
         </div>
     </div>
+    
 
 @section('cart-scripts')
     <script src="{{ asset('js/updatequantity.js') }}"></script>
     <script src="{{ asset('js/cart.js') }}"></script>
     <script src="{{ asset('js/preview.js') }}"></script>
+    <script src="{{ asset('js/hide-empty-seqnum.js') }}"></script>
 @endsection
-
 </x-app-layout>
