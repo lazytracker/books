@@ -186,19 +186,21 @@ foreach ($orders as $row) {
         // Prepare the content for the text file with book IDs
         $url_ids = Array();
         $finalContent = "";
-        foreach ($order as $cartItem) {
-            $url_id = $cartItem->book->url_id . ".txt"; // 
-            $booksNum = $cartItem->quantity;
-            $orderDate = $cartItem->created_at;
-            $orderNum = $cartItem->ordernum;
+            foreach ($order as $cartItem) {
+                $url_id = $cartItem->book->url_id . ".txt";
+                $booksNum = $cartItem->quantity;
+                $orderDate = $cartItem->created_at->format('Ymd'); // дата в формате YYYYMMDD
+                $orderNum = $cartItem->ordernum;
+                $price = $cartItem->price;
 
-        
-        $to_add = "#910: ^AU^1{".$booksNum."}^DХР^D{".$orderDate."}^E{цена экз.}^Y{".$orderNum."}\r\n";//это нужно добавить в начало каждой записи
-        //foreach($url_ids as $url_id){
-            $fileContent = Storage::get(trim($url_id)) . "\r\n";
-            $finalContent .= $to_add . $fileContent;
-                       
-        }
+                $to_add = "#910: ^AU^1" . $booksNum 
+                        . "^DХР^D" . $orderDate 
+                        . "^E" . $price 
+                        . "^Y" . $orderNum . "\r\n";
+
+                $fileContent = Storage::get(trim($url_id)) . "\r\n";
+                $finalContent .= $to_add . $fileContent;
+            }
 
         
 
