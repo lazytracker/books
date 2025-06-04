@@ -67,9 +67,10 @@
         <input type="hidden" name="orderNum" value="{{ $orderNum }}">
 
 @if($items->first()->is_verified)
-    <button type="submit" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+    <a href="{{ route('order.download', [auth()->id(), $orderNum]) }}"
+       style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none;">
         Скачать marc-записи
-    </button>
+    </a>
 @else
     <button type="button" disabled style="padding: 8px 16px; background-color: #f9f9f9; color: #888; border: 1px solid #ccc; border-radius: 4px; cursor: not-allowed;">
         Скачать marc-записи
