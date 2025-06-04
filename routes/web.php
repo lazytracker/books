@@ -9,6 +9,13 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ClientsController; // Добавляем импорт
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ManualOrderController;
+
+// Добавьте эти маршруты в ваш routes/web.php файл
+
+Route::get('/manualorder', [ManualOrderController::class, 'index'])->name('manual-order.index');
+Route::post('/manualorder/upload', [ManualOrderController::class, 'upload'])->name('manual-order.upload');
+Route::post('/manualorder/clear', [ManualOrderController::class, 'clear'])->name('manual-order.clear');
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::post('/cart/updateQuantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
