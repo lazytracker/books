@@ -106,13 +106,18 @@ class BookController extends Controller
         $normalizedSearchTerm = str_replace(['-', ' '], '', $searchTerm);
 
         // В поиске НЕ применяем фильтр по seqNum - показываем все результаты
-        $results = DB::table('books')
-            ->whereRaw("MATCH(caption, author) AGAINST(? IN NATURAL LANGUAGE MODE)", [$searchTerm])
-            ->orWhereRaw("REPLACE(isbn, '-', '') REGEXP ?", ['(^|,| )'.preg_quote($normalizedSearchTerm, '/').'($|,| )'])
-            ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-            ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-            ->orWhere('seqNum', 'LIKE', '%' . $normalizedSearchTerm . '%')
-            ->get();
+$booleanSearch = collect(explode(' ', $searchTerm))
+    ->filter() // на случай двойных пробелов
+    ->map(fn($word) => '+' . $word)
+    ->implode(' ');
+
+$results = DB::table('books')
+    ->whereRaw("MATCH(caption, author) AGAINST(? IN BOOLEAN MODE)", [$booleanSearch])
+    ->orWhereRaw("REPLACE(isbn, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+    ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+    ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
+    ->orWhere('seqNum', 'LIKE', '%' . $normalizedSearchTerm . '%')
+    ->get();
 
         // Получаем информацию о товарах, которые уже в корзине пользователя
         $cartItems = [];

@@ -19,11 +19,25 @@
 <div class="py-12">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {{-- Заголовок с сортировкой --}}
-        <div class="flex justify-between items-center mb-6">
+{{-- Заголовок с кнопками и сортировкой --}}
+        <div class="flex items-center mb-6">
             <h1 class="text-2xl font-bold">Все заказы</h1>
             
-            {{-- Сортировка --}}
+            {{-- Кнопки управления по центру --}}
+            <div class="flex-1 flex justify-center">
+                <div class="flex items-center space-x-2">
+                    <a href="{{ route('manual-order.index') }}" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition-colors w-40 text-center text-sm">
+                        Загрузить заказ
+                    </a>
+                    <a href="{{ route('sync.interface') }}" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow transition-colors w-40 text-center text-sm">
+                        ИРБИС→MySQL
+                    </a>
+                </div>
+            </div>
+            
+            {{-- Сортировка справа --}}
             <div class="flex items-center space-x-2">
                 <label for="sort" class="font-semibold text-gray-700">Сортировка:</label>
                 <select id="sort" name="sort" class="rounded border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" onchange="handleSortChange()">

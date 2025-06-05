@@ -10,8 +10,42 @@ use App\Http\Controllers\ClientsController; // Добавляем импорт
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ManualOrderController;
+use App\Http\Controllers\IrbisToMySqlSyncController;
+use App\Http\Controllers\SyncViewController; // Добавить этот импорт
+Route::get('/sync/debug-record', [IrbisToMySqlSyncController::class, 'debugRecord'])->name('sync.debug');
 
-// Добавьте эти маршруты в ваш routes/web.php файл
+// Маршрут для отображения страницы синхронизации
+Route::get('/sync', [SyncViewController::class, 'index'])->name('sync.interface');
+
+// Остальные маршруты синхронизации (уже существующие)
+Route::get('/sync/irbis-to-mysql', [IrbisToMySqlSyncController::class, 'syncNebToBooks'])
+    ->name('sync.irbis.to.mysql');
+
+Route::get('/sync/test-connection', [IrbisToMySqlSyncController::class, 'testConnection'])
+    ->name('sync.test.connection');
+
+Route::post('/sync/range', [IrbisToMySqlSyncController::class, 'syncRange'])
+    ->name('sync.range');
+
+// Основная синхронизация всех записей NEB -> MySQL
+Route::get('/sync/irbis-to-mysql', [IrbisToMySqlSyncController::class, 'syncNebToBooks'])
+    ->name('sync.irbis.to.mysql');
+
+// Тестирование подключений
+Route::get('/sync/test-connection', [IrbisToMySqlSyncController::class, 'testConnection'])
+    ->name('sync.test.connection');
+
+// Синхронизация определенного диапазона MFN
+Route::post('/sync/range', [IrbisToMySqlSyncController::class, 'syncRange'])
+    ->name('sync.range');
+
+// Альтернативно, для GET-запроса с параметрами:
+Route::get('/sync/range/{start_mfn}/{end_mfn}', function($start_mfn, $end_mfn) {
+    $request = request();
+    $request->merge(['start_mfn' => $start_mfn, 'end_mfn' => $end_mfn]);
+    return app(IrbisToMySqlSyncController::class)->syncRange($request);
+})->where(['start_mfn' => '[0-9]+', 'end_mfn' => '[0-9]+'])
+  ->name('sync.range.get');
 
 Route::get('/manualorder', [ManualOrderController::class, 'index'])->name('manual-order.index');
 Route::post('/manualorder/upload', [ManualOrderController::class, 'upload'])->name('manual-order.upload');
