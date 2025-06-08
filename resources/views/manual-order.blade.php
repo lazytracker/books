@@ -59,6 +59,21 @@
                     </svg>
                     Очистить данные
                 </button>
+
+                <!-- Update Database Button -->
+                <button @click="updateDatabase()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                        :disabled="loading">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!loading">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" x-show="loading">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-show="!loading">Обновить базу</span>
+                    <span x-show="loading">Обновляется...</span>
+                </button>
             </div>
             
             <!-- File info -->
@@ -274,125 +289,43 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                async updateDatabase() {
+                    if (!confirm('Вы уверены, что хотите обновить базу данных из ИРБИС?')) {
+                        return;
+                    }
+
+                    this.loading = true;
+
+                    try {
+                        const response = await fetch('{{ route("manual-order.update-database") }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json',
+                            },
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            alert(result.message || 'База данных успешно обновлена!');
+                            if (result.updated_count > 0) {
+                                window.location.reload();
+                            }
+                        } else {
+                            throw new Error(result.message || 'Database update failed');
+                        }
+                    } catch (error) {
+                        alert('Ошибка при обновлении базы данных: ' + error.message);
+                        console.error('Database update error:', error);
+                    } finally {
+                        this.loading = false;
+                    }
                 }
             }
         }
-    </script>
-    <script>
-        function manualOrder() {
-    return {
-        selectedFile: null,
-        loading: false,
-
-        handleFileSelect(event) {
-            console.log('=== FILE SELECT EVENT ===');
-            this.selectedFile = event.target.files[0];
-            console.log('Selected file:', this.selectedFile);
-            console.log('File name:', this.selectedFile?.name);
-            console.log('File size:', this.selectedFile?.size);
-            console.log('File type:', this.selectedFile?.type);
-        },
-
-        formatFileSize(bytes) {
-            if (!bytes) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        },
-
-        async uploadFile() {
-            console.log('=== UPLOAD FILE START ===');
-            if (!this.selectedFile) {
-                console.error('No file selected');
-                return;
-            }
-
-            console.log('Starting upload for file:', this.selectedFile.name);
-            this.loading = true;
-            
-            const formData = new FormData();
-            formData.append('excel_file', this.selectedFile);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
-            console.log('FormData created');
-            console.log('CSRF Token:', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-            console.log('Upload URL:', '{{ route("manual-order.upload") }}');
-
-            try {
-                console.log('Sending fetch request...');
-                const response = await fetch('{{ route("manual-order.upload") }}', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                console.log('Response received:', response);
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                console.log('Response headers:', response.headers);
-
-                if (response.ok) {
-                    console.log('Upload successful, reloading page...');
-                    window.location.reload();
-                } else {
-                    console.error('Upload failed with status:', response.status);
-                    const responseText = await response.text();
-                    console.error('Response text:', responseText);
-                    throw new Error(`Upload failed with status ${response.status}`);
-                }
-            } catch (error) {
-                console.error('=== UPLOAD ERROR ===');
-                console.error('Error details:', error);
-                console.error('Error message:', error.message);
-                console.error('Error stack:', error.stack);
-                alert('Ошибка при загрузке файла: ' + error.message);
-            } finally {
-                console.log('Upload process finished');
-                this.loading = false;
-            }
-        },
-
-        async clearData() {
-            console.log('=== CLEAR DATA START ===');
-            if (!confirm('Вы уверены, что хотите очистить все данные?')) {
-                console.log('Clear cancelled by user');
-                return;
-            }
-
-            console.log('Starting clear operation...');
-            this.loading = true;
-
-            try {
-                console.log('Clear URL:', '{{ route("manual-order.clear") }}');
-                const response = await fetch('{{ route("manual-order.clear") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                console.log('Clear response:', response);
-                console.log('Clear response status:', response.status);
-
-                if (response.ok) {
-                    console.log('Clear successful, reloading page...');
-                    window.location.reload();
-                } else {
-                    console.error('Clear failed with status:', response.status);
-                    throw new Error(`Clear failed with status ${response.status}`);
-                }
-            } catch (error) {
-                console.error('=== CLEAR ERROR ===');
-                console.error('Clear error details:', error);
-                alert('Ошибка при очистке данных: ' + error.message);
-            } finally {
-                console.log('Clear process finished');
-                this.loading = false;
-            }
-        }
-    }
-}
     </script>
     
     <style>

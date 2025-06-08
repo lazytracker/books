@@ -111,13 +111,17 @@ $booleanSearch = collect(explode(' ', $searchTerm))
     ->map(fn($word) => '+' . $word)
     ->implode(' ');
 
+$normalized = preg_replace('/[^a-zа-я0-9]/ui', '', mb_strtolower($searchTerm));
+
 $results = DB::table('books')
-    ->whereRaw("MATCH(caption, author) AGAINST(? IN BOOLEAN MODE)", [$booleanSearch])
-    ->orWhereRaw("REPLACE(isbn, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-    ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-    ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalizedSearchTerm . '%'])
-    ->orWhere('seqNum', 'LIKE', '%' . $normalizedSearchTerm . '%')
+    ->where('search_index', 'LIKE', '%' . $normalized . '%')
+    // другие поля:
+    ->orWhereRaw("REPLACE(isbn, '-', '') LIKE ?", ['%' . $normalized . '%'])
+    ->orWhereRaw("REPLACE(ART, '-', '') LIKE ?", ['%' . $normalized . '%'])
+    ->orWhereRaw("REPLACE(url_id, '-', '') LIKE ?", ['%' . $normalized . '%'])
+    ->orWhere('seqNum', 'LIKE', '%' . $normalized . '%')
     ->get();
+
 
         // Получаем информацию о товарах, которые уже в корзине пользователя
         $cartItems = [];

@@ -10,7 +10,6 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ManualOrderController extends Controller
 {
-    private $irbis;
     
     public function updateDatabase()
     {
@@ -44,11 +43,11 @@ class ManualOrderController extends Controller
             Log::info("Подключаемся к ИРБИС: {$server}:{$port}");
 
             // Создаем экземпляр класса ИРБИС
-            $this->irbis = new \irbis64($server, $port, $login, $password, $database);
+            $irbis = new \irbis64($server, $port, $login, $password, $database);
             
             // Авторизуемся
-            if (!$this->irbis->login()) {
-                throw new \Exception('Ошибка авторизации в ИРБИС: ' . $this->irbis->error());
+            if (!$irbis->login()) {
+                throw new \Exception('Ошибка авторизации в ИРБИС: ' . $irbis->error());
             }
 
             Log::info('Успешная авторизация в ИРБИС');
@@ -60,12 +59,12 @@ class ManualOrderController extends Controller
             Log::info("Ищем термины для дат: {$currentDate} и {$previousDate}");
 
             // Более эффективный поиск терминов
-            $validTerms = $this->findValidTerms([$currentDate, $previousDate]);
+            $validTerms = $this->findValidTerms($irbis, [$currentDate, $previousDate]);
 
             Log::info("Всего найдено подходящих терминов: " . count($validTerms));
 
             if (empty($validTerms)) {
-                $this->irbis->logout();
+                $irbis->logout();
                 return response()->json([
                     'success' => true,
                     'message' => 'Обновление завершено. Термины с указанными датами не найдены.',
@@ -80,7 +79,7 @@ class ManualOrderController extends Controller
             // Обрабатываем каждый найденный термин
             foreach ($validTerms as $termInfo) {
                 try {
-                    $termUpdates = $this->processTermRecords($termInfo, $processedRecords);
+                    $termUpdates = $this->processTermRecords($irbis, $termInfo, $processedRecords);
                     $updatedCount += $termUpdates;
                 } catch (\Exception $e) {
                     $errors[] = "Ошибка обработки термина {$termInfo['term']}: " . $e->getMessage();
@@ -89,7 +88,7 @@ class ManualOrderController extends Controller
             }
 
             // Завершаем сессию ИРБИС
-            $this->irbis->logout();
+            $irbis->logout();
             
             Log::info("=== ОБНОВЛЕНИЕ ЗАВЕРШЕНО ===");
             Log::info("Обновлено записей: {$updatedCount}");
@@ -110,11 +109,6 @@ class ManualOrderController extends Controller
             Log::error('Критическая ошибка при обновлении базы: ' . $e->getMessage());
             Log::error('Трассировка: ' . $e->getTraceAsString());
             
-            // Завершаем сессию ИРБИС если она была открыта
-            if (isset($this->irbis)) {
-                $this->irbis->logout();
-            }
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка при обновлении базы: ' . $e->getMessage(),
@@ -126,7 +120,7 @@ class ManualOrderController extends Controller
     /**
      * Поиск валидных терминов для указанных дат
      */
-    private function findValidTerms($dates)
+    private function findValidTerms($irbis, $dates)
     {
         $validTerms = [];
         
@@ -136,10 +130,10 @@ class ManualOrderController extends Controller
             
             try {
                 // Читаем словарь, начиная с термина
-                $terms = $this->irbis->terms_read($searchTerm, 1000);
+                $terms = $irbis->terms_read($searchTerm, 1000);
                 
                 if ($terms === false) {
-                    Log::warning("Ошибка чтения словаря для {$searchTerm}: " . $this->irbis->error());
+                    Log::warning("Ошибка чтения словаря для {$searchTerm}: " . $irbis->error());
                     continue;
                 }
 
@@ -211,13 +205,13 @@ class ManualOrderController extends Controller
     /**
      * Обработка записей для конкретного термина
      */
-    private function processTermRecords($termInfo, &$processedRecords)
+    private function processTermRecords($irbis, $termInfo, &$processedRecords)
     {
         Log::info("Обрабатываем термин: {$termInfo['term']}");
         
         try {
             // Сначала получаем количество записей
-            $recordCount = $this->irbis->term_records($termInfo['term'], 0, 0);
+            $recordCount = $irbis->term_records($termInfo['term'], 0, 0);
             if ($recordCount === false || empty($recordCount) || $recordCount[0] == 0) {
                 Log::warning("Нет записей для термина {$termInfo['term']}");
                 return 0;
@@ -227,10 +221,10 @@ class ManualOrderController extends Controller
             Log::info("Всего записей для термина: {$totalRecords}");
             
             // Получаем все MFN записей
-            $mfnList = $this->irbis->term_records($termInfo['term'], $totalRecords, 1);
+            $mfnList = $irbis->term_records($termInfo['term'], $totalRecords, 1);
             
             if ($mfnList === false || empty($mfnList)) {
-                Log::warning("Не удалось получить MFN для термина {$termInfo['term']}: " . $this->irbis->error());
+                Log::warning("Не удалось получить MFN для термина {$termInfo['term']}: " . $irbis->error());
                 return 0;
             }
 
@@ -247,7 +241,7 @@ class ManualOrderController extends Controller
                 $processedRecords[] = $mfn;
 
                 try {
-                    if ($this->processRecord($mfn)) {
+                    if ($this->processRecord($irbis, $mfn)) {
                         $updatedCount++;
                     }
                 } catch (\Exception $e) {
@@ -265,21 +259,21 @@ class ManualOrderController extends Controller
     /**
      * Обработка отдельной записи
      */
-    private function processRecord($mfn)
+    private function processRecord($irbis, $mfn)
     {
         Log::info("Читаем запись MFN: {$mfn}");
         
         try {
-            // Используем безопасное чтение записи
-            $record = $this->safeReadRecord($mfn);
+            // Читаем запись из ИРБИС
+            $record = $irbis->record_read($mfn);
             
             if ($record === false) {
-                Log::warning("Не удалось прочитать запись MFN {$mfn}");
+                Log::warning("Ошибка чтения записи MFN {$mfn}: " . $irbis->error());
                 return false;
             }
 
-            // Получаем поле 803 (внешний ID книги) с безопасной проверкой
-            $field803 = $this->getFieldValue($record, 803);
+            // Получаем поле 803 (внешний ID книги)
+            $field803 = $record->field(803);
             if (empty($field803)) {
                 Log::info("Поле 803 отсутствует в записи MFN {$mfn}");
                 return false;
@@ -302,8 +296,8 @@ class ManualOrderController extends Controller
                 return false;
             }
 
-            // Получаем поле 802 (артикул) с безопасной проверкой
-            $field802 = $this->getFieldValue($record, 802);
+            // Получаем поле 802 (артикул)
+            $field802 = $record->field(802);
             if (empty($field802)) {
                 Log::info("Поле 802 отсутствует в записи MFN {$mfn}");
                 return false;
@@ -323,6 +317,7 @@ class ManualOrderController extends Controller
                 ->where('id', $externalId)
                 ->update([
                     'ART' => $articleNumber,
+                    'updated_at' => now()
                 ]);
 
             if ($updated) {
@@ -335,114 +330,6 @@ class ManualOrderController extends Controller
         } catch (\Exception $e) {
             Log::error("Ошибка при обработке записи MFN {$mfn}: " . $e->getMessage());
             throw $e;
-        }
-    }
-
-    /**
-     * Безопасное чтение записи из ИРБИС с обработкой ошибок протокола
-     * (Скопировано из IrbisToMySqlSyncController)
-     */
-    private function safeReadRecord($mfn)
-    {
-        try {
-            // Пытаемся прочитать запись
-            $record = $this->irbis->record_read($mfn);
-            
-            // Проверяем код ошибки ИРБИС
-            if ($this->irbis->error_code != 0) {
-                // Пропускаем удаленные или недоступные записи
-                if (in_array($this->irbis->error_code, [-603, -601, -140])) {
-                    return false;
-                }
-                
-                // Для других ошибок логируем и пропускаем
-                Log::warning("Ошибка чтения MFN=$mfn: " . $this->irbis->error());
-                return false;
-            }
-            
-            return $record;
-            
-        } catch (\Error $e) {
-            // Ловим фатальные ошибки PHP (например, Undefined array key)
-            Log::warning("Ошибка протокола при чтении MFN=$mfn: " . $e->getMessage());
-            return false;
-            
-        } catch (\Exception $e) {
-            // Ловим обычные исключения
-            Log::warning("Исключение при чтении MFN=$mfn: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Безопасное получение значения поля из записи ИРБИС
-     * (Скопировано из IrbisToMySqlSyncController)
-     */
-    private function getFieldValue($record, $fieldTag, $occurrence = 1)
-    {
-        try {
-            // Проверяем, что запись существует и корректна
-            if (!$record || !is_object($record)) {
-                return null;
-            }
-
-            // Разные варианты получения поля в зависимости от версии библиотеки
-            if (method_exists($record, 'getField')) {
-                $field = $record->getField($fieldTag, $occurrence);
-            } elseif (method_exists($record, 'field')) {
-                $field = $record->field($fieldTag, $occurrence);
-            } elseif (property_exists($record, 'fields') && is_array($record->fields) && isset($record->fields[$fieldTag])) {
-                $fields = $record->fields[$fieldTag];
-                if (is_array($fields) && isset($fields[$occurrence])) {
-                    $field = $fields[$occurrence];
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-
-            // Если поле не найдено
-            if (!$field) {
-                return null;
-            }
-
-            // Если поле - массив с подполями
-            if (is_array($field)) {
-                // Проверяем наличие ключа '*' (полное значение поля)
-                if (isset($field['*'])) {
-                    return trim((string)$field['*']);
-                }
-                // Если нет ключа '*', берем первое значение
-                if (!empty($field)) {
-                    $firstValue = reset($field);
-                    return trim((string)$firstValue);
-                }
-                return null;
-            }
-
-            // Если поле - объект
-            if (is_object($field)) {
-                if (method_exists($field, 'toString')) {
-                    return trim($field->toString());
-                } elseif (method_exists($field, '__toString')) {
-                    return trim((string)$field);
-                } elseif (property_exists($field, 'value')) {
-                    return trim((string)$field->value);
-                } elseif (property_exists($field, '*')) {
-                    return trim((string)$field->{'*'});
-                }
-            }
-
-            // Если поле - простая строка
-            return $field ? trim((string)$field) : null;
-
-        } catch (\Error $e) {
-            Log::warning("Фатальная ошибка получения поля $fieldTag: " . $e->getMessage());
-            return null;
-        } catch (\Exception $e) {
-            Log::warning("Ошибка получения поля $fieldTag: " . $e->getMessage());
-            return null;
         }
     }
 
@@ -539,6 +426,8 @@ class ManualOrderController extends Controller
                     'year' => trim($row[6] ?? ''),
                     'quantity' => (int)($row[8] ?? 0),
                     'price' => $price,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
 
                 Log::info("Подготовленные данные: " . json_encode($orderData, JSON_UNESCAPED_UNICODE));
