@@ -413,7 +413,7 @@
                         const allWords = cleanCaption.split(/\s+/).filter(word => word.length > 0);
                         
                         // Фильтруем слова: только буквы, длиной более 3 символов, исключаем "язык" и "учебник"
-                        const excludeWords = ['язык', 'учебник'];
+                        const excludeWords = ['язык', 'учебник', 'класс', 'часть', 'Часть'];
                         const validWords = allWords.filter(word => {
                             const lowerWord = word.toLowerCase();
                             return /^[а-яёa-z]+$/i.test(word) && 
