@@ -132,14 +132,25 @@
         @if($orders->count() > 0)
         <div class="bg-white shadow-sm rounded-lg overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900">
-                    Загруженные данные ({{ $orders->count() }} записей)
-                </h2>
-                <!-- Добавляем легенду для пользователя -->
-                <p class="text-sm text-gray-600 mt-1">
-                    <span class="inline-block w-3 h-3 bg-green-200 rounded mr-2"></span>
-                    Строки с зелёным фоном соответствуют записям в основной базе данных
-                </p>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900">
+                            Загруженные данные ({{ $orders->count() }} записей)
+                        </h2>
+                        <!-- Добавляем легенду для пользователя -->
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span class="inline-block w-3 h-3 bg-green-200 rounded mr-2"></span>
+                            Строки с зелёным фоном соответствуют записям в основной базе данных
+                        </p>
+                    </div>
+                    @if($orderInfo)
+                    <div class="text-right">
+                        <p class="text-lg font-medium text-gray-900">
+                            Заказ {{ $orderInfo->ordernum }} от {{ $orderInfo->created_at ? $orderInfo->created_at->format('d.m.Y') : 'N/A' }}
+                        </p>
+                    </div>
+                    @endif
+                </div>
             </div>
             
             <div class="overflow-auto custom-scrollbar" style="max-height: 70vh;">

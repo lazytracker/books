@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Carbon\Carbon;
 
 class ManualOrderController extends Controller
 {
@@ -452,6 +453,9 @@ public function index()
     // Получаем только загруженные данные из Excel-файла
     $orders = DB::table('uploaded_orders')->get();
     
+    // Заглушка, чтобы переменная существовала всегда
+    $orderInfo = null;
+
     // Создаем ассоциативный массив для быстрого поиска совпадений в основной БД
     $matchingKeys = [];
     
@@ -486,10 +490,18 @@ public function index()
         
         // Перезагружаем данные после обновления
         $orders = DB::table('uploaded_orders')->get();
-    }
-    
-    return view('manual-order', compact('orders', 'matchingKeys'));
+
+        // Получаем информацию о заказе
+        $orderInfo = DB::table('uploaded_orders')->first();
+
+if ($orderInfo && isset($orderInfo->created_at)) {
+    $orderInfo->created_at = Carbon::parse($orderInfo->created_at);
 }
+    }
+
+    return view('manual-order', compact('orders', 'matchingKeys', 'orderInfo'));
+}
+
 
     public function upload(Request $request)
     {
