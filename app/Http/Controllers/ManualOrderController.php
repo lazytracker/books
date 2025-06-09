@@ -515,6 +515,30 @@ public function index()
                 Log::info("Строка $i: " . json_encode($rows[$i], JSON_UNESCAPED_UNICODE));
             }
 
+            // Извлекаем номер заказа и дату из второй строки (индекс 1)
+            $orderNum = null;
+            $orderDate = null;
+            
+            if (isset($rows[1]) && isset($rows[1][0])) {
+                $secondRowText = trim($rows[1][0]);
+                Log::info("Вторая строка для извлечения данных: " . $secondRowText);
+                
+                // Паттерн для поиска номера заказа и даты
+                if (preg_match('/Заказ\s+([A-Za-z0-9]+)\s+от\s+(\d{2}\.\d{2}\.\d{4})/', $secondRowText, $matches)) {
+                    $orderNum = $matches[1];
+                    $dateString = $matches[2];
+                    
+                    // Преобразуем дату из формата дд.мм.гггг в гггг-мм-дд 00:00:00
+                    $dateParts = explode('.', $dateString);
+                    if (count($dateParts) === 3) {
+                        $orderDate = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0] . ' 00:00:00';
+                    }
+                    
+                    Log::info("Извлечен номер заказа: " . $orderNum);
+                    Log::info("Извлечена дата заказа: " . $orderDate);
+                }
+            }
+
             // Очищаем таблицу перед загрузкой новых данных
             DB::table('uploaded_orders')->truncate();
             Log::info('Таблица очищена');
@@ -578,6 +602,8 @@ public function index()
                     'year' => trim($row[6] ?? ''),
                     'quantity' => (int)($row[8] ?? 0),
                     'price' => $price,
+                    'ordernum' => $orderNum,
+                    'created_at' => $orderDate,
                 ];
 
                 Log::info("Подготовленные данные: " . json_encode($orderData, JSON_UNESCAPED_UNICODE));

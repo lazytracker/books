@@ -9,8 +9,7 @@ return new class extends Migration {
     {
         Schema::table('uploaded_orders', function (Blueprint $table) {
             $table->boolean('is_verified')->nullable()->default(null)->after('year');
-            // Или если хочешь default 0:
-            // $table->boolean('is_verified')->nullable()->default(0)->after('year');
+            $table->string('ordernum')->nullable()->after('is_verified');
         });
     }
 
@@ -18,6 +17,7 @@ return new class extends Migration {
     {
         Schema::table('uploaded_orders', function (Blueprint $table) {
             $table->dropColumn('is_verified');
+            $table->dropColumn('ordernum');
         });
     }
 };
