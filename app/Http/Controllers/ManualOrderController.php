@@ -12,6 +12,7 @@ class ManualOrderController extends Controller
 {
     private $irbis;
     
+    
     public function updateDatabase()
     {
         // Добавляем заголовки для JSON-ответа
@@ -446,11 +447,49 @@ class ManualOrderController extends Controller
         }
     }
 
-    public function index()
-    {
+public function index()
+{
+    // Получаем только загруженные данные из Excel-файла
+    $orders = DB::table('uploaded_orders')->get();
+    
+    // Создаем ассоциативный массив для быстрого поиска совпадений в основной БД
+    $matchingKeys = [];
+    
+    if ($orders->isNotEmpty()) {
+        // Получаем все записи из таблицы books для сравнения
+        $booksData = DB::table('books')
+            ->select('ART', 'year')
+            ->whereNotNull('ART')
+            ->whereNotNull('year')
+            ->where('ART', '!=', '')
+            ->where('year', '!=', '')
+            ->get();
+        
+        // Создаем массив ключей для быстрого поиска
+        $matchingKeys = $booksData
+            ->filter(fn($book) => !empty($book->ART) && !empty($book->year))
+            ->mapWithKeys(fn($book) => ["{$book->ART}_{$book->year}" => true])
+            ->toArray();
+        
+        // Обновляем is_verified для совпадающих записей
+        foreach ($orders as $order) {
+            if (!empty($order->ART) && !empty($order->year)) {
+                $key = $order->ART . '_' . $order->year;
+                $isMatching = isset($matchingKeys[$key]);
+                
+                // Обновляем поле is_verified
+                DB::table('uploaded_orders')
+                    ->where('id', $order->id)
+                    ->update(['is_verified' => $isMatching ? 1 : 0]);
+            }
+        }
+        
+        // Перезагружаем данные после обновления
         $orders = DB::table('uploaded_orders')->get();
-        return view('manual-order', compact('orders'));
     }
+    
+    return view('manual-order', compact('orders', 'matchingKeys'));
+}
 
     public function upload(Request $request)
     {

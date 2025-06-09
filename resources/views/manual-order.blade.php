@@ -24,6 +24,14 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        
+        /* Стиль для выделения совпадающих записей */
+        .matching-record {
+            background-color: #dcfce7 !important; /* светло-зелёный фон */
+        }
+        .matching-record:hover {
+            background-color: #bbf7d0 !important; /* чуть темнее при наведении */
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -127,73 +135,84 @@
                 <h2 class="text-xl font-semibold text-gray-900">
                     Загруженные данные ({{ $orders->count() }} записей)
                 </h2>
+                <!-- Добавляем легенду для пользователя -->
+                <p class="text-sm text-gray-600 mt-1">
+                    <span class="inline-block w-3 h-3 bg-green-200 rounded mr-2"></span>
+                    Строки с зелёным фоном соответствуют записям в основной базе данных
+                </p>
             </div>
             
-<!-- Замените существующую таблицу на эту -->
-<div class="overflow-auto custom-scrollbar" style="max-height: 70vh;">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50 sticky top-0">
-            <tr>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
-                    Артикул
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
-                    Код ФП
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">
-                    Автор
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 300px;">
-                    Наименование
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
-                    Год
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
-                    Кол-во
-                </th>
-                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
-                    Цена, руб.
-                </th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            @foreach($orders as $order)
-            <tr class="hover:bg-gray-50">
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div class="max-w-[100px] truncate" title="{{ $order->ART }}">
-                        {{ $order->ART }}
-                    </div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div class="max-w-[120px] truncate" title="{{ $order->seqNum }}">
-                        {{ $order->seqNum }}
-                    </div>
-                </td>
-                <td class="px-3 py-4 text-sm text-gray-900">
-                    <div class="max-w-[200px] line-clamp-2" title="{{ $order->author }}">
-                        {{ $order->author }}
-                    </div>
-                </td>
-                <td class="px-3 py-4 text-sm text-gray-900">
-                    <div class="max-w-[300px] line-clamp-3" title="{{ $order->caption }}">
-                        {{ $order->caption }}
-                    </div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ $order->year }}
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                    {{ $order->quantity }}
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                    {{ number_format($order->price, 2, ',', ' ') }}
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+            <div class="overflow-auto custom-scrollbar" style="max-height: 70vh;">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
+                                Артикул
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                                Код ФП
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">
+                                Автор
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 300px;">
+                                Наименование
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
+                                Год
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
+                                Кол-во
+                            </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
+                                Цена, руб.
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($orders as $order)
+                            @php
+                                $isMatching = false;
+                                if (!empty($order->ART) && !empty($order->year)) {
+                                    $key = $order->ART . '_' . $order->year;
+                                    $isMatching = isset($matchingKeys[$key]);
+                                }
+                            @endphp
+                            <tr class="hover:bg-gray-50 {{ $isMatching ? 'matching-record' : '' }}">
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div class="max-w-[100px] truncate" title="{{ $order->ART }}">
+                                        {{ $order->ART }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div class="max-w-[120px] truncate" title="{{ $order->seqNum }}">
+                                        {{ $order->seqNum }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 text-sm text-gray-900">
+                                    <div class="max-w-[200px] line-clamp-2" title="{{ $order->author }}">
+                                        {{ $order->author }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 text-sm text-gray-900">
+                                    <div class="max-w-[300px] line-clamp-3" title="{{ $order->caption }}">
+                                        {{ $order->caption }}
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $order->year }}
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                    {{ $order->quantity ?? '-' }}
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                    {{ isset($order->price) ? number_format($order->price, 2, ',', ' ') : '-' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
         @else
         <div class="bg-white shadow-sm rounded-lg p-8 text-center">
