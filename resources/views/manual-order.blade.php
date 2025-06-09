@@ -160,6 +160,9 @@
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
                                 Артикул
                             </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 90px;">
+                                Копировать
+                            </th>
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
                                 Код ФП
                             </th>
@@ -178,6 +181,9 @@
                             <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
                                 Цена, руб.
                             </th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                                Действия
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -194,6 +200,17 @@
                                     <div class="max-w-[100px] truncate" title="{{ $order->ART }}">
                                         {{ $order->ART }}
                                     </div>
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <button 
+                                        @click="copyArticleToClipboard('{{ $order->ART }}')"
+                                        class="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                                        title="Копировать артикул">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                        Арт.
+                                    </button>
                                 </td>
                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <div class="max-w-[120px] truncate" title="{{ $order->seqNum }}">
@@ -218,6 +235,19 @@
                                 </td>
                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                                     {{ isset($order->price) ? number_format($order->price, 2, ',', ' ') : '-' }}
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    @if(is_null($order->is_verified) || $order->is_verified == 0)
+                                        <button 
+                                            @click="copyToClipboard('{{ addslashes($order->author) }}', '{{ addslashes($order->caption) }}', '{{ $order->year }}')"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                                            title="Копировать в буфер обмена">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                            </svg>
+                                            Копировать
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -353,6 +383,125 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                copyArticleToClipboard(article) {
+                    try {
+                        // Копируем артикул в буфер обмена
+                        navigator.clipboard.writeText(article).then(() => {
+                            // Показываем уведомление об успешном копировании
+                            this.showCopyNotification(article);
+                        }).catch(err => {
+                            console.error('Ошибка копирования:', err);
+                            // Fallback для старых браузеров
+                            this.fallbackCopyToClipboard(article);
+                        });
+                        
+                    } catch (error) {
+                        console.error('Ошибка при копировании артикула:', error);
+                        alert('Ошибка при копировании в буфер обмена');
+                    }
+                },
+
+                copyToClipboard(author, caption, year) {
+                    try {
+                        // Извлекаем первое слово из автора (до пробела)
+                        const authorFirstName = author.split(' ')[0];
+                        
+                        // Очищаем caption от знаков препинания и разбиваем на слова
+                        const cleanCaption = caption.replace(/[^\wа-яёА-ЯЁ\s\d]/g, ' ');
+                        const allWords = cleanCaption.split(/\s+/).filter(word => word.length > 0);
+                        
+                        // Фильтруем слова: только буквы, длиной более 3 символов, исключаем "язык" и "учебник"
+                        const excludeWords = ['язык', 'учебник'];
+                        const validWords = allWords.filter(word => {
+                            const lowerWord = word.toLowerCase();
+                            return /^[а-яёa-z]+$/i.test(word) && 
+                                   word.length > 3 && 
+                                   !excludeWords.includes(lowerWord);
+                        });
+                        
+                        // Находим первую цифру в caption
+                        const digitMatch = caption.match(/\d/);
+                        const firstDigit = digitMatch ? digitMatch[0] : null;
+                        
+                        // Выбираем до 2 случайных слов
+                        const shuffledWords = [...validWords].sort(() => 0.5 - Math.random());
+                        const selectedWords = shuffledWords.slice(0, 2);
+                        
+                        console.log('Caption:', caption);
+                        console.log('Valid words found:', validWords);
+                        console.log('Selected words:', selectedWords);
+                        console.log('First digit:', firstDigit);
+                        
+                        // Формируем строку
+                        let result = `("A=${authorFirstName}$")*("G=${year}$")`;
+                        
+                        // Добавляем K части, если есть данные
+                        const kParts = [];
+                        selectedWords.forEach(word => {
+                            kParts.push(`"K=${word}$"`);
+                        });
+                        
+                        if (firstDigit) {
+                            kParts.push(`"K=${firstDigit}$"`);
+                        }
+                        
+                        if (kParts.length > 0) {
+                            result += `*(${kParts.join('/()*')}/()*)`
+                        }
+                        
+                        // Копируем в буфер обмена
+                        navigator.clipboard.writeText(result).then(() => {
+                            // Показываем уведомление об успешном копировании
+                            this.showCopyNotification(result);
+                        }).catch(err => {
+                            console.error('Ошибка копирования:', err);
+                            // Fallback для старых браузеров
+                            this.fallbackCopyToClipboard(result);
+                        });
+                        
+                    } catch (error) {
+                        console.error('Ошибка при формировании строки:', error);
+                        alert('Ошибка при копировании в буфер обмена');
+                    }
+                },
+
+                fallbackCopyToClipboard(text) {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        this.showCopyNotification(text);
+                    } catch (err) {
+                        console.error('Fallback copy failed:', err);
+                        alert('Не удалось скопировать в буфер обмена');
+                    } finally {
+                        document.body.removeChild(textArea);
+                    }
+                },
+
+                showCopyNotification(copiedText) {
+                    // Создаем временное уведомление
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 max-w-md';
+                    notification.innerHTML = `<div class="break-words">Строка скопирована в буфер обмена: ${copiedText}</div>`;
+                    document.body.appendChild(notification);
+                    
+                    // Удаляем уведомление через 3 секунды
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => {
+                            if (document.body.contains(notification)) {
+                                document.body.removeChild(notification);
+                            }
+                        }, 300);
+                    }, 3000);
                 }
             }
         }

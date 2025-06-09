@@ -15,6 +15,7 @@ use App\Http\Controllers\SyncViewController; // Добавить этот имп
 Route::post('/manual-order/update-database', [ManualOrderController::class, 'updateDatabase'])->name('manual-order.update-database');
 Route::get('/sync/debug-record', [IrbisToMySqlSyncController::class, 'debugRecord'])->name('sync.debug');
 
+
 // Маршрут для отображения страницы синхронизации
 Route::get('/sync', [SyncViewController::class, 'index'])->name('sync.interface');
 
