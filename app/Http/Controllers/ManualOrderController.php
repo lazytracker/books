@@ -543,15 +543,20 @@ public function downloadOrders()
 
 public function index()
 {
+    // Получаем список пользователей для выпадающего списка
+    $users = DB::table('users')->select('id', 'name')->orderBy('name')->get();
+    
+    // Получаем выбранного пользователя из сессии
+    $selectedUserId = session('selected_user_id');
+    
     // Получаем только загруженные данные из Excel-файла
     $orders = DB::table('uploaded_orders')->get();
-    
+   
     // Заглушка, чтобы переменная существовала всегда
     $orderInfo = null;
-
     // Создаем ассоциативный массив для быстрого поиска совпадений в основной БД
     $matchingKeys = [];
-    
+   
     if ($orders->isNotEmpty()) {
         // Получаем все записи из таблицы books для сравнения
         $booksData = DB::table('books')
@@ -561,196 +566,212 @@ public function index()
             ->where('ART', '!=', '')
             ->where('year', '!=', '')
             ->get();
-        
+       
         // Создаем массив ключей для быстрого поиска
         $matchingKeys = $booksData
             ->filter(fn($book) => !empty($book->ART) && !empty($book->year))
             ->mapWithKeys(fn($book) => ["{$book->ART}_{$book->year}" => true])
             ->toArray();
-        
+       
         // Обновляем is_verified для совпадающих записей
         foreach ($orders as $order) {
             if (!empty($order->ART) && !empty($order->year)) {
                 $key = $order->ART . '_' . $order->year;
                 $isMatching = isset($matchingKeys[$key]);
-                
+               
                 // Обновляем поле is_verified
                 DB::table('uploaded_orders')
                     ->where('id', $order->id)
                     ->update(['is_verified' => $isMatching ? 1 : 0]);
             }
         }
-        
+       
         // Перезагружаем данные после обновления
         $orders = DB::table('uploaded_orders')->get();
-
         // Получаем информацию о заказе
         $orderInfo = DB::table('uploaded_orders')->first();
-
-if ($orderInfo && isset($orderInfo->created_at)) {
-    $orderInfo->created_at = Carbon::parse($orderInfo->created_at);
-}
-    }
-
-    return view('manual-order', compact('orders', 'matchingKeys', 'orderInfo'));
-}
-
-
-    public function upload(Request $request)
-    {
-        Log::info('=== НАЧАЛО ЗАГРУЗКИ ФАЙЛА ===');
-        
-        $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // max 10MB
-        ]);
-
-        try {
-            $file = $request->file('excel_file');
-            Log::info('Файл получен: ' . $file->getClientOriginalName());
-            Log::info('Размер файла: ' . $file->getSize() . ' байт');
-            
-            $spreadsheet = IOFactory::load($file->getPathname());
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
-            
-            Log::info('Общее количество строк в файле: ' . count($rows));
-
-            // Показываем первые 15 строк для анализа
-            for ($i = 0; $i < min(15, count($rows)); $i++) {
-                Log::info("Строка $i: " . json_encode($rows[$i], JSON_UNESCAPED_UNICODE));
-            }
-
-            // Извлекаем номер заказа и дату из второй строки (индекс 1)
-            $orderNum = null;
-            $orderDate = null;
-            
-            if (isset($rows[1]) && isset($rows[1][0])) {
-                $secondRowText = trim($rows[1][0]);
-                Log::info("Вторая строка для извлечения данных: " . $secondRowText);
-                
-                // Паттерн для поиска номера заказа и даты
-                if (preg_match('/Заказ\s+([A-Za-z0-9]+)\s+от\s+(\d{2}\.\d{2}\.\d{4})/', $secondRowText, $matches)) {
-                    $orderNum = $matches[1];
-                    $dateString = $matches[2];
-                    
-                    // Преобразуем дату из формата дд.мм.гггг в гггг-мм-дд 00:00:00
-                    $dateParts = explode('.', $dateString);
-                    if (count($dateParts) === 3) {
-                        $orderDate = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0] . ' 00:00:00';
-                    }
-                    
-                    Log::info("Извлечен номер заказа: " . $orderNum);
-                    Log::info("Извлечена дата заказа: " . $orderDate);
-                }
-            }
-
-            // Очищаем таблицу перед загрузкой новых данных
-            DB::table('uploaded_orders')->truncate();
-            Log::info('Таблица очищена');
-
-            $insertedCount = 0;
-            $skippedCount = 0;
-
-            // Пробуем разные варианты начальной строки
-            $possibleStartRows = [6, 7, 8, 9, 10]; // Индексы возможных начальных строк
-            
-            foreach ($possibleStartRows as $startRow) {
-                Log::info("=== Проверяем начальную строку: $startRow ===");
-                
-                if ($startRow >= count($rows)) {
-                    Log::info("Строка $startRow не существует");
-                    continue;
-                }
-                
-                $testRow = $rows[$startRow];
-                Log::info("Содержимое тестовой строки $startRow: " . json_encode($testRow, JSON_UNESCAPED_UNICODE));
-                
-                // Проверяем, похожа ли строка на заголовок или данные
-                if (isset($testRow[0]) && is_numeric($testRow[0])) {
-                    Log::info("Найдена возможная начальная строка данных: $startRow");
-                    break;
-                }
-            }
-
-            // Начинаем с найденной строки или с 8 по умолчанию
-            $dataStartRow = isset($startRow) ? $startRow : 8;
-            Log::info("Используем начальную строку: $dataStartRow");
-
-            for ($i = $dataStartRow; $i < count($rows); $i++) {
-                $row = $rows[$i];
-                
-                Log::info("Обрабатываем строку $i: " . json_encode($row, JSON_UNESCAPED_UNICODE));
-                
-                // Пропускаем совсем пустые строки
-                if (empty(array_filter($row))) {
-                    Log::info("Строка $i пустая, пропускаем");
-                    $skippedCount++;
-                    continue;
-                }
-                
-                // Пропускаем строки с "ИТОГО"
-                if (isset($row[0]) && strpos(strtoupper($row[0] ?? ''), 'ИТОГО') !== false) {
-                    Log::info("Строка $i содержит ИТОГО, пропускаем");
-                    $skippedCount++;
-                    continue;
-                }
-
-                // Преобразуем цену из российского формата в европейский
-                $price = $this->convertPrice($row[9] ?? '0');
-                Log::info("Цена после конвертации: $price");
-
-                $orderData = [
-                    'ART' => trim($row[1] ?? ''),
-                    'seqNum' => trim($row[2] ?? ''),
-                    'author' => trim($row[4] ?? ''),
-                    'caption' => trim($row[5] ?? ''),
-                    'year' => trim($row[6] ?? ''),
-                    'quantity' => (int)($row[8] ?? 0),
-                    'price' => $price,
-                    'ordernum' => $orderNum,
-                    'created_at' => $orderDate,
-                ];
-
-                Log::info("Подготовленные данные: " . json_encode($orderData, JSON_UNESCAPED_UNICODE));
-
-                // Проверяем, есть ли хоть какие-то значимые данные
-                $hasData = !empty($orderData['ART']) || !empty($orderData['caption']) || !empty($orderData['author']);
-                
-                if ($hasData) {
-                    try {
-                        DB::table('uploaded_orders')->insert($orderData);
-                        $insertedCount++;
-                        Log::info("Строка $i успешно вставлена в БД");
-                    } catch (\Exception $dbError) {
-                        Log::error("Ошибка вставки строки $i в БД: " . $dbError->getMessage());
-                    }
-                } else {
-                    Log::info("Строка $i не содержит значимых данных, пропускаем");
-                    $skippedCount++;
-                }
-            }
-
-            Log::info("=== РЕЗУЛЬТАТ ОБРАБОТКИ ===");
-            Log::info("Вставлено записей: $insertedCount");
-            Log::info("Пропущено строк: $skippedCount");
-
-            if ($insertedCount > 0) {
-                return redirect()->route('manual-order.index')
-                    ->with('success', "Файл успешно загружен! Обработано записей: {$insertedCount}, пропущено: {$skippedCount}");
-            } else {
-                return redirect()->route('manual-order.index')
-                    ->with('error', "В файле не найдено данных для загрузки. Проверьте логи для детальной информации. Пропущено строк: {$skippedCount}");
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Критическая ошибка при загрузке файла: ' . $e->getMessage());
-            Log::error('Трассировка: ' . $e->getTraceAsString());
-            return redirect()->route('manual-order.index')
-                ->with('error', 'Ошибка при загрузке файла: ' . $e->getMessage());
+        if ($orderInfo && isset($orderInfo->created_at)) {
+            $orderInfo->created_at = Carbon::parse($orderInfo->created_at);
         }
     }
+    
+    return view('manual-order', compact('orders', 'matchingKeys', 'orderInfo', 'users', 'selectedUserId'));
+}
+public function updateUser(Request $request)
+{
+    $userId = $request->input('user_id');
+    
+    // Сохраняем выбранного пользователя в сессии
+    session(['selected_user_id' => $userId]);
+    
+    return response()->json(['success' => true]);
+}
 
-    public function clear()
+
+public function upload(Request $request)
+{
+    Log::info('=== НАЧАЛО ЗАГРУЗКИ ФАЙЛА ===');
+    
+    $request->validate([
+        'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // max 10MB
+        'user_id' => 'required|exists:users,id'
+    ]);
+
+    try {
+        $file = $request->file('excel_file');
+        $userId = $request->input('user_id');
+        
+        // Сохраняем выбранного пользователя в сессии
+        session(['selected_user_id' => $userId]);
+        
+        Log::info('Файл получен: ' . $file->getClientOriginalName());
+        Log::info('Размер файла: ' . $file->getSize() . ' байт');
+        Log::info('Выбранный пользователь: ' . $userId);
+        
+        $spreadsheet = IOFactory::load($file->getPathname());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
+        
+        Log::info('Общее количество строк в файле: ' . count($rows));
+
+        // Показываем первые 15 строк для анализа
+        for ($i = 0; $i < min(15, count($rows)); $i++) {
+            Log::info("Строка $i: " . json_encode($rows[$i], JSON_UNESCAPED_UNICODE));
+        }
+
+        // Извлекаем номер заказа и дату из второй строки (индекс 1)
+        $orderNum = null;
+        $orderDate = null;
+        
+        if (isset($rows[1]) && isset($rows[1][0])) {
+            $secondRowText = trim($rows[1][0]);
+            Log::info("Вторая строка для извлечения данных: " . $secondRowText);
+            
+            // Паттерн для поиска номера заказа и даты
+            if (preg_match('/Заказ\s+([A-Za-z0-9]+)\s+от\s+(\d{2}\.\d{2}\.\d{4})/', $secondRowText, $matches)) {
+                $orderNum = $matches[1];
+                $dateString = $matches[2];
+                
+                // Преобразуем дату из формата дд.мм.гггг в гггг-мм-дд 00:00:00
+                $dateParts = explode('.', $dateString);
+                if (count($dateParts) === 3) {
+                    $orderDate = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0] . ' 00:00:00';
+                }
+                
+                Log::info("Извлечен номер заказа: " . $orderNum);
+                Log::info("Извлечена дата заказа: " . $orderDate);
+            }
+        }
+
+        // Очищаем таблицу перед загрузкой новых данных
+        DB::table('uploaded_orders')->truncate();
+        Log::info('Таблица очищена');
+
+        $insertedCount = 0;
+        $skippedCount = 0;
+
+        // Пробуем разные варианты начальной строки
+        $possibleStartRows = [6, 7, 8, 9, 10]; // Индексы возможных начальных строк
+        
+        foreach ($possibleStartRows as $startRow) {
+            Log::info("=== Проверяем начальную строку: $startRow ===");
+            
+            if ($startRow >= count($rows)) {
+                Log::info("Строка $startRow не существует");
+                continue;
+            }
+            
+            $testRow = $rows[$startRow];
+            Log::info("Содержимое тестовой строки $startRow: " . json_encode($testRow, JSON_UNESCAPED_UNICODE));
+            
+            // Проверяем, похожа ли строка на заголовок или данные
+            if (isset($testRow[0]) && is_numeric($testRow[0])) {
+                Log::info("Найдена возможная начальная строка данных: $startRow");
+                break;
+            }
+        }
+
+        // Начинаем с найденной строки или с 8 по умолчанию
+        $dataStartRow = isset($startRow) ? $startRow : 8;
+        Log::info("Используем начальную строку: $dataStartRow");
+
+        for ($i = $dataStartRow; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            
+            Log::info("Обрабатываем строку $i: " . json_encode($row, JSON_UNESCAPED_UNICODE));
+            
+            // Пропускаем совсем пустые строки
+            if (empty(array_filter($row))) {
+                Log::info("Строка $i пустая, пропускаем");
+                $skippedCount++;
+                continue;
+            }
+            
+            // Пропускаем строки с "ИТОГО"
+            if (isset($row[0]) && strpos(strtoupper($row[0] ?? ''), 'ИТОГО') !== false) {
+                Log::info("Строка $i содержит ИТОГО, пропускаем");
+                $skippedCount++;
+                continue;
+            }
+
+            // Преобразуем цену из российского формата в европейский
+            $price = $this->convertPrice($row[9] ?? '0');
+            Log::info("Цена после конвертации: $price");
+
+            $orderData = [
+                'ART' => trim($row[1] ?? ''),
+                'seqNum' => trim($row[2] ?? ''),
+                'author' => trim($row[4] ?? ''),
+                'caption' => trim($row[5] ?? ''),
+                'year' => trim($row[6] ?? ''),
+                'quantity' => (int)($row[8] ?? 0),
+                'price' => $price,
+                'ordernum' => $orderNum,
+                'userid' => $userId, // Добавляем ID пользователя
+                'created_at' => $orderDate ?: now(),
+                'updated_at' => now(),
+            ];
+
+            Log::info("Подготовленные данные: " . json_encode($orderData, JSON_UNESCAPED_UNICODE));
+
+            // Проверяем, есть ли хоть какие-то значимые данные
+            $hasData = !empty($orderData['ART']) || !empty($orderData['caption']) || !empty($orderData['author']);
+            
+            if ($hasData) {
+                try {
+                    DB::table('uploaded_orders')->insert($orderData);
+                    $insertedCount++;
+                    Log::info("Строка $i успешно вставлена в БД");
+                } catch (\Exception $dbError) {
+                    Log::error("Ошибка вставки строки $i в БД: " . $dbError->getMessage());
+                }
+            } else {
+                Log::info("Строка $i не содержит значимых данных, пропускаем");
+                $skippedCount++;
+            }
+        }
+
+        Log::info("=== РЕЗУЛЬТАТ ОБРАБОТКИ ===");
+        Log::info("Вставлено записей: $insertedCount");
+        Log::info("Пропущено строк: $skippedCount");
+
+        if ($insertedCount > 0) {
+            return redirect()->route('manual-order.index')
+                ->with('success', "Файл успешно загружен! Обработано записей: {$insertedCount}, пропущено: {$skippedCount}");
+        } else {
+            return redirect()->route('manual-order.index')
+                ->with('error', "В файле не найдено данных для загрузки. Проверьте логи для детальной информации. Пропущено строк: {$skippedCount}");
+        }
+
+    } catch (\Exception $e) {
+        Log::error('Критическая ошибка при загрузке файла: ' . $e->getMessage());
+        Log::error('Трассировка: ' . $e->getTraceAsString());
+        return redirect()->route('manual-order.index')
+            ->with('error', 'Ошибка при загрузке файла: ' . $e->getMessage());
+    }
+}
+
+   public function clear()
     {
         DB::table('uploaded_orders')->truncate();
         return redirect()->route('manual-order.index')->with('success', 'Данные успешно очищены!');
@@ -774,4 +795,5 @@ if ($orderInfo && isset($orderInfo->created_at)) {
         
         return $result;
     }
+
 }

@@ -34,6 +34,21 @@
         }
     </style>
 </head>
+<div class="mb-6">
+    <label for="user_select" class="block text-sm font-medium text-gray-700 mb-2">
+        Выберите пользователя
+    </label>
+    <select id="user_select" 
+            class="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            @change="updateSelectedUser($event.target.value)">
+        <option value="">-- Выберите пользователя --</option>
+        @foreach($users as $user)
+            <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
+                {{ $user->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8" x-data="manualOrder()">
         
@@ -94,7 +109,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span x-show="!loading">Скачать заказы</span>
+                    <span x-show="!loading">Сформировать заказ</span>
                     <span x-show="loading">Скачивается...</span>
                 </button>
             
@@ -295,6 +310,7 @@ function manualOrder() {
     return {
         selectedFile: null,
         loading: false,
+        selectedUserId: {{ $selectedUserId ?? 'null' }},
 
         handleFileSelect(event) {
             this.selectedFile = event.target.files[0];
@@ -308,13 +324,43 @@ function manualOrder() {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
 
+        async updateSelectedUser(userId) {
+            this.selectedUserId = userId || null;
+            
+            try {
+                const response = await fetch('{{ route("manual-order.update-user") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: this.selectedUserId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update user');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert('Ошибка при сохранении выбранного пользователя');
+            }
+        },
+
         async uploadFile() {
             if (!this.selectedFile) return;
+            
+            if (!this.selectedUserId) {
+                alert('Пожалуйста, выберите пользователя перед загрузкой файла');
+                return;
+            }
 
             this.loading = true;
             
             const formData = new FormData();
             formData.append('excel_file', this.selectedFile);
+            formData.append('user_id', this.selectedUserId);
             formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
             try {
