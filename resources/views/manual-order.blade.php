@@ -38,17 +38,16 @@
     <label for="user_select" class="block text-sm font-medium text-gray-700 mb-2">
         Выберите пользователя
     </label>
-<select id="user_select" 
-        class="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        x-model="selectedUserId"
-        @change="updateSelectedUser($event.target.value)">
-    <option value="">-- Выберите пользователя --</option>
-    @foreach($users as $user)
-        <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
-            {{ $user->name }}
-        </option>
-    @endforeach
-</select>
+    <select id="user_select" 
+            class="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            @change="updateSelectedUser($event.target.value)">
+        <option value="">-- Выберите пользователя --</option>
+        @foreach($users as $user)
+            <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
+                {{ $user->name }}
+            </option>
+        @endforeach
+    </select>
 </div>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8" x-data="manualOrder()">
@@ -311,8 +310,7 @@ function manualOrder() {
     return {
         selectedFile: null,
         loading: false,
-        // Исправляем инициализацию - используем строку вместо числа для сравнения
-        selectedUserId: '{{ $selectedUserId ?? "" }}',
+        selectedUserId: {{ $selectedUserId ?? 'null' }},
 
         handleFileSelect(event) {
             this.selectedFile = event.target.files[0];
@@ -327,7 +325,7 @@ function manualOrder() {
         },
 
         async updateSelectedUser(userId) {
-            this.selectedUserId = userId || '';
+            this.selectedUserId = userId || null;
             
             try {
                 const response = await fetch('{{ route("manual-order.update-user") }}', {
@@ -337,7 +335,7 @@ function manualOrder() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        user_id: this.selectedUserId || null
+                        user_id: this.selectedUserId
                     })
                 });
 
@@ -353,12 +351,7 @@ function manualOrder() {
         async uploadFile() {
             if (!this.selectedFile) return;
             
-            // Добавляем отладочную информацию
-            console.log('selectedUserId:', this.selectedUserId);
-            console.log('selectedUserId type:', typeof this.selectedUserId);
-            
-            // Исправляем проверку - учитываем и пустую строку
-            if (!this.selectedUserId || this.selectedUserId === '') {
+            if (!this.selectedUserId) {
                 alert('Пожалуйста, выберите пользователя перед загрузкой файла');
                 return;
             }
