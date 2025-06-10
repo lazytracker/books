@@ -349,38 +349,48 @@ function manualOrder() {
         },
 
         async uploadFile() {
-            if (!this.selectedFile) return;
-            
-            if (!this.selectedUserId) {
-                alert('Пожалуйста, выберите пользователя перед загрузкой файла');
-                return;
-            }
+    if (!this.selectedFile) return;
+    
+    // Проверяем, что пользователь выбран
+    if (!this.selectedUserId) {
+        alert('Пожалуйста, выберите пользователя перед загрузкой файла');
+        return;
+    }
 
-            this.loading = true;
-            
-            const formData = new FormData();
-            formData.append('excel_file', this.selectedFile);
-            formData.append('user_id', this.selectedUserId);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    // Сначала обновляем пользователя в сессии
+    try {
+        await this.updateSelectedUser(this.selectedUserId);
+    } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Ошибка при сохранении выбранного пользователя');
+        return;
+    }
 
-            try {
-                const response = await fetch('{{ route("manual-order.upload") }}', {
-                    method: 'POST',
-                    body: formData,
-                });
+    this.loading = true;
+    
+    const formData = new FormData();
+    formData.append('excel_file', this.selectedFile);
+    formData.append('user_id', this.selectedUserId);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    throw new Error('Upload failed');
-                }
-            } catch (error) {
-                alert('Ошибка при загрузке файла');
-                console.error('Upload error:', error);
-            } finally {
-                this.loading = false;
-            }
-        },
+    try {
+        const response = await fetch('{{ route("manual-order.upload") }}', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            throw new Error('Upload failed');
+        }
+    } catch (error) {
+        alert('Ошибка при загрузке файла');
+        console.error('Upload error:', error);
+    } finally {
+        this.loading = false;
+    }
+},
 
         async clearData() {
             if (!confirm('Вы уверены, что хотите очистить все данные?')) {
