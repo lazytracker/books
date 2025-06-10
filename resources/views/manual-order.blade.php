@@ -34,11 +34,14 @@
         }
     </style>
 </head>
-<div class="mb-6">
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8" x-data="manualOrder()">
+        <div class="mb-6">
     <label for="user_select" class="block text-sm font-medium text-gray-700 mb-2">
         Выберите пользователя
     </label>
     <select id="user_select" 
+            x-model="selectedUserId"
             class="block w-full max-w-md px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             @change="updateSelectedUser($event.target.value)">
         <option value="">-- Выберите пользователя --</option>
@@ -48,10 +51,12 @@
             </option>
         @endforeach
     </select>
+    
+    <!-- Для отладки - можно удалить позже -->
+    <div class="mt-2 text-sm text-gray-500" x-show="selectedUserId">
+        Выбранный пользователь ID: <span x-text="selectedUserId"></span>
+    </div>
 </div>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8" x-data="manualOrder()">
-        
         <!-- Header -->
         <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
             <h1 class="text-3xl font-bold text-gray-900 mb-6">Загрузка заказов учебников</h1>
@@ -325,62 +330,74 @@ function manualOrder() {
         },
 
         async updateSelectedUser(userId) {
-            this.selectedUserId = userId || null;
-            
-            try {
-                const response = await fetch('{{ route("manual-order.update-user") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: this.selectedUserId
-                    })
-                });
+    // Сначала обновляем локальную переменную
+    this.selectedUserId = userId || null;
+    
+    try {
+        const response = await fetch('{{ route("manual-order.update-user") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: this.selectedUserId
+            })
+        });
 
-                if (!response.ok) {
-                    throw new Error('Failed to update user');
-                }
-            } catch (error) {
-                console.error('Error updating user:', error);
-                alert('Ошибка при сохранении выбранного пользователя');
-            }
-        },
+        if (!response.ok) {
+            throw new Error('Failed to update user');
+        }
+        
+        console.log('Selected user updated:', this.selectedUserId); // Для отладки
+        
+    } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Ошибка при сохранении выбранного пользователя');
+        
+        // В случае ошибки возвращаем предыдущее значение
+        this.selectedUserId = {{ $selectedUserId ?? 'null' }};
+    }
+},
 
-        async uploadFile() {
-            if (!this.selectedFile) return;
-            
-            if (!this.selectedUserId) {
-                alert('Пожалуйста, выберите пользователя перед загрузкой файла');
-                return;
-            }
+async uploadFile() {
+    console.log('Current selectedUserId:', this.selectedUserId); // Для отладки
+    
+    if (!this.selectedFile) {
+        alert('Пожалуйста, выберите файл для загрузки');
+        return;
+    }
+    
+    if (!this.selectedUserId) {
+        alert('Пожалуйста, выберите пользователя перед загрузкой файла');
+        return;
+    }
 
-            this.loading = true;
-            
-            const formData = new FormData();
-            formData.append('excel_file', this.selectedFile);
-            formData.append('user_id', this.selectedUserId);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    this.loading = true;
+    
+    const formData = new FormData();
+    formData.append('excel_file', this.selectedFile);
+    formData.append('user_id', this.selectedUserId);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-            try {
-                const response = await fetch('{{ route("manual-order.upload") }}', {
-                    method: 'POST',
-                    body: formData,
-                });
+    try {
+        const response = await fetch('{{ route("manual-order.upload") }}', {
+            method: 'POST',
+            body: formData,
+        });
 
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    throw new Error('Upload failed');
-                }
-            } catch (error) {
-                alert('Ошибка при загрузке файла');
-                console.error('Upload error:', error);
-            } finally {
-                this.loading = false;
-            }
-        },
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            throw new Error('Upload failed');
+        }
+    } catch (error) {
+        alert('Ошибка при загрузке файла');
+        console.error('Upload error:', error);
+    } finally {
+        this.loading = false;
+    }
+},
 
         async clearData() {
             if (!confirm('Вы уверены, что хотите очистить все данные?')) {
