@@ -124,6 +124,99 @@ class ManualOrderController extends Controller
             ], 500);
         }
     }
+    /**
+ * Transfer verified orders from uploaded_orders to orders table
+ */
+public function downloadOrders()
+{
+    try {
+        DB::beginTransaction();
+        
+        // Получаем все проверенные записи из uploaded_orders
+        $verifiedOrders = DB::table('uploaded_orders')
+            ->where('is_verified', 1)
+            ->get();
+            
+        if ($verifiedOrders->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Нет проверенных заказов для переноса',
+                'transferred_count' => 0
+            ]);
+        }
+        
+        $transferredCount = 0;
+        $errors = [];
+        
+        foreach ($verifiedOrders as $order) {
+            // Ищем соответствующую книгу по ART и year
+            $book = DB::table('books')
+                ->where('ART', $order->ART)
+                ->where('year', $order->year)
+                ->first();
+                
+            if ($book) {
+                // Проверяем, не существует ли уже такой заказ
+                $existingOrder = DB::table('orders')
+                    ->where('productid', $book->id)
+                    ->where('userid', $order->userid)
+                    ->where('ordernum', $order->ordernum)
+                    ->first();
+                    
+                if (!$existingOrder) {
+                    // Вставляем новую запись в orders
+                    DB::table('orders')->insert([
+                        'productid' => $book->id,
+                        'userid' => $order->userid,
+                        'ordernum' => $order->ordernum,
+                        'price' => $order->price,
+                        'quantity' => $order->quantity,
+                        'created_at' => $order->created_at,
+                        'updated_at' => now()
+                    ]);
+                    
+                    $transferredCount++;
+                } else {
+                    $errors[] = "Заказ для книги {$order->ART} уже существует";
+                }
+            } else {
+                $errors[] = "Книга с артикулом {$order->ART} и годом {$order->year} не найдена";
+            }
+        }
+        
+        // Удаляем перенесённые записи из uploaded_orders (опционально)
+        if ($transferredCount > 0) {
+            DB::table('uploaded_orders')
+                ->where('is_verified', 1)
+                ->delete();
+        }
+        
+        DB::commit();
+        
+        $message = "Успешно перенесено заказов: {$transferredCount}";
+        if (!empty($errors)) {
+            $message .= "\nПредупреждения: " . implode(', ', array_slice($errors, 0, 3));
+            if (count($errors) > 3) {
+                $message .= " и ещё " . (count($errors) - 3) . " предупреждений";
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'transferred_count' => $transferredCount,
+            'errors' => $errors
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка при переносе заказов: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
     /**
      * Поиск валидных терминов для указанных дат

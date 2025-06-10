@@ -68,7 +68,7 @@
                     Очистить данные
                 </button>
 
-                <!-- Update Database Button -->
+<!-- Update Database Button -->
                 <button @click="updateDatabase()" 
                         class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
                         :disabled="loading">
@@ -82,7 +82,21 @@
                     <span x-show="!loading">Обновить базу</span>
                     <span x-show="loading">Обновляется...</span>
                 </button>
-            </div>
+
+                <!-- Download Orders Button -->
+                <button @click="downloadOrders()" 
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                        :disabled="loading">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!loading">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" x-show="loading">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-show="!loading">Скачать заказы</span>
+                    <span x-show="loading">Скачивается...</span>
+                </button>
             
             <!-- File info -->
             <div x-show="selectedFile" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -277,235 +291,270 @@
     </form>
 
     <script>
-        function manualOrder() {
-            return {
-                selectedFile: null,
-                loading: false,
+function manualOrder() {
+    return {
+        selectedFile: null,
+        loading: false,
 
-                handleFileSelect(event) {
-                    this.selectedFile = event.target.files[0];
-                },
+        handleFileSelect(event) {
+            this.selectedFile = event.target.files[0];
+        },
 
-                formatFileSize(bytes) {
-                    if (!bytes) return '0 B';
-                    const k = 1024;
-                    const sizes = ['B', 'KB', 'MB', 'GB'];
-                    const i = Math.floor(Math.log(bytes) / Math.log(k));
-                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-                },
+        formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
 
-                async uploadFile() {
-                    if (!this.selectedFile) return;
+        async uploadFile() {
+            if (!this.selectedFile) return;
 
-                    this.loading = true;
-                    
-                    const formData = new FormData();
-                    formData.append('excel_file', this.selectedFile);
-                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            this.loading = true;
+            
+            const formData = new FormData();
+            formData.append('excel_file', this.selectedFile);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-                    try {
-                        const response = await fetch('{{ route("manual-order.upload") }}', {
-                            method: 'POST',
-                            body: formData,
-                        });
+            try {
+                const response = await fetch('{{ route("manual-order.upload") }}', {
+                    method: 'POST',
+                    body: formData,
+                });
 
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            throw new Error('Upload failed');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при загрузке файла');
-                        console.error('Upload error:', error);
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                async clearData() {
-                    if (!confirm('Вы уверены, что хотите очистить все данные?')) {
-                        return;
-                    }
-
-                    this.loading = true;
-
-                    try {
-                        const response = await fetch('{{ route("manual-order.clear") }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Content-Type': 'application/json',
-                            },
-                        });
-
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            throw new Error('Clear failed');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при очистке данных');
-                        console.error('Clear error:', error);
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                async updateDatabase() {
-                    if (!confirm('Вы уверены, что хотите обновить базу данных из ИРБИС?')) {
-                        return;
-                    }
-
-                    this.loading = true;
-
-                    try {
-                        const response = await fetch('{{ route("manual-order.update-database") }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Content-Type': 'application/json',
-                            },
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            alert(result.message || 'База данных успешно обновлена!');
-                            if (result.updated_count > 0) {
-                                window.location.reload();
-                            }
-                        } else {
-                            throw new Error(result.message || 'Database update failed');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при обновлении базы данных: ' + error.message);
-                        console.error('Database update error:', error);
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                copyArticleToClipboard(article) {
-                    try {
-                        // Копируем артикул в буфер обмена
-                        navigator.clipboard.writeText(article).then(() => {
-                            // Показываем уведомление об успешном копировании
-                            this.showCopyNotification(article);
-                        }).catch(err => {
-                            console.error('Ошибка копирования:', err);
-                            // Fallback для старых браузеров
-                            this.fallbackCopyToClipboard(article);
-                        });
-                        
-                    } catch (error) {
-                        console.error('Ошибка при копировании артикула:', error);
-                        alert('Ошибка при копировании в буфер обмена');
-                    }
-                },
-
-                copyToClipboard(author, caption, year) {
-                    try {
-                        // Извлекаем первое слово из автора (до пробела)
-                        const authorFirstName = author.split(' ')[0];
-                        
-                        // Очищаем caption от знаков препинания и разбиваем на слова
-                        const cleanCaption = caption.replace(/[^\wа-яёА-ЯЁ\s\d]/g, ' ');
-                        const allWords = cleanCaption.split(/\s+/).filter(word => word.length > 0);
-                        
-                        // Фильтруем слова: только буквы, длиной более 3 символов, исключаем "язык" и "учебник"
-                        const excludeWords = ['язык', 'учебник', 'класс', 'часть', 'Часть'];
-                        const validWords = allWords.filter(word => {
-                            const lowerWord = word.toLowerCase();
-                            return /^[а-яёa-z]+$/i.test(word) && 
-                                   word.length > 3 && 
-                                   !excludeWords.includes(lowerWord);
-                        });
-                        
-                        // Находим первую цифру в caption
-                        const digitMatch = caption.match(/\d/);
-                        const firstDigit = digitMatch ? digitMatch[0] : null;
-                        
-                        // Выбираем до 2 случайных слов
-                        const shuffledWords = [...validWords].sort(() => 0.5 - Math.random());
-                        const selectedWords = shuffledWords.slice(0, 2);
-                        
-                        console.log('Caption:', caption);
-                        console.log('Valid words found:', validWords);
-                        console.log('Selected words:', selectedWords);
-                        console.log('First digit:', firstDigit);
-                        
-                        // Формируем строку
-                        let result = `("A=${authorFirstName}$")*("G=${year}$")`;
-                        
-                        // Добавляем K части, если есть данные
-                        const kParts = [];
-                        selectedWords.forEach(word => {
-                            kParts.push(`"K=${word}$"`);
-                        });
-                        
-                        if (firstDigit) {
-                            kParts.push(`"K=${firstDigit}$"`);
-                        }
-                        
-                        if (kParts.length > 0) {
-                            result += `*(${kParts.join('/()*')}/()*)`
-                        }
-                        
-                        // Копируем в буфер обмена
-                        navigator.clipboard.writeText(result).then(() => {
-                            // Показываем уведомление об успешном копировании
-                            this.showCopyNotification(result);
-                        }).catch(err => {
-                            console.error('Ошибка копирования:', err);
-                            // Fallback для старых браузеров
-                            this.fallbackCopyToClipboard(result);
-                        });
-                        
-                    } catch (error) {
-                        console.error('Ошибка при формировании строки:', error);
-                        alert('Ошибка при копировании в буфер обмена');
-                    }
-                },
-
-                fallbackCopyToClipboard(text) {
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    textArea.style.position = 'fixed';
-                    textArea.style.left = '-999999px';
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    
-                    try {
-                        document.execCommand('copy');
-                        this.showCopyNotification(text);
-                    } catch (err) {
-                        console.error('Fallback copy failed:', err);
-                        alert('Не удалось скопировать в буфер обмена');
-                    } finally {
-                        document.body.removeChild(textArea);
-                    }
-                },
-
-                showCopyNotification(copiedText) {
-                    // Создаем временное уведомление
-                    const notification = document.createElement('div');
-                    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 max-w-md';
-                    notification.innerHTML = `<div class="break-words">Строка скопирована в буфер обмена: ${copiedText}</div>`;
-                    document.body.appendChild(notification);
-                    
-                    // Удаляем уведомление через 3 секунды
-                    setTimeout(() => {
-                        notification.style.opacity = '0';
-                        setTimeout(() => {
-                            if (document.body.contains(notification)) {
-                                document.body.removeChild(notification);
-                            }
-                        }, 300);
-                    }, 3000);
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Upload failed');
                 }
+            } catch (error) {
+                alert('Ошибка при загрузке файла');
+                console.error('Upload error:', error);
+            } finally {
+                this.loading = false;
             }
+        },
+
+        async clearData() {
+            if (!confirm('Вы уверены, что хотите очистить все данные?')) {
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                const response = await fetch('{{ route("manual-order.clear") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Clear failed');
+                }
+            } catch (error) {
+                alert('Ошибка при очистке данных');
+                console.error('Clear error:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateDatabase() {
+            if (!confirm('Вы уверены, что хотите обновить базу данных из ИРБИС?')) {
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                const response = await fetch('{{ route("manual-order.update-database") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message || 'База данных успешно обновлена!');
+                    if (result.updated_count > 0) {
+                        window.location.reload();
+                    }
+                } else {
+                    throw new Error(result.message || 'Database update failed');
+                }
+            } catch (error) {
+                alert('Ошибка при обновлении базы данных: ' + error.message);
+                console.error('Database update error:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async downloadOrders() {
+            if (!confirm('Вы уверены, что хотите перенести проверенные заказы в основную базу?')) {
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                const response = await fetch('{{ route("manual-order.download-orders") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message || 'Заказы успешно перенесены!');
+                    if (result.transferred_count > 0) {
+                        window.location.reload();
+                    }
+                } else {
+                    throw new Error(result.message || 'Transfer failed');
+                }
+            } catch (error) {
+                alert('Ошибка при переносе заказов: ' + error.message);
+                console.error('Download orders error:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        copyArticleToClipboard(article) {
+            try {
+                // Копируем артикул в буфер обмена
+                navigator.clipboard.writeText(article).then(() => {
+                    // Показываем уведомление об успешном копировании
+                    this.showCopyNotification(article);
+                }).catch(err => {
+                    console.error('Ошибка копирования:', err);
+                    // Fallback для старых браузеров
+                    this.fallbackCopyToClipboard(article);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка при копировании артикула:', error);
+                alert('Ошибка при копировании в буфер обмена');
+            }
+        },
+
+        copyToClipboard(author, caption, year) {
+            try {
+                // Извлекаем первое слово из автора (до пробела)
+                const authorFirstName = author.split(' ')[0];
+                
+                // Очищаем caption от знаков препинания и разбиваем на слова
+                const cleanCaption = caption.replace(/[^\wа-яёА-ЯЁ\s\d]/g, ' ');
+                const allWords = cleanCaption.split(/\s+/).filter(word => word.length > 0);
+                
+                // Фильтруем слова: только буквы, длиной более 3 символов, исключаем "язык" и "учебник"
+                const excludeWords = ['язык', 'учебник', 'класс', 'часть', 'Часть'];
+                const validWords = allWords.filter(word => {
+                    const lowerWord = word.toLowerCase();
+                    return /^[а-яёa-z]+$/i.test(word) && 
+                           word.length > 3 && 
+                           !excludeWords.includes(lowerWord);
+                });
+                
+                // Находим первую цифру в caption
+                const digitMatch = caption.match(/\d/);
+                const firstDigit = digitMatch ? digitMatch[0] : null;
+                
+                // Выбираем до 2 случайных слов
+                const shuffledWords = [...validWords].sort(() => 0.5 - Math.random());
+                const selectedWords = shuffledWords.slice(0, 2);
+                
+                console.log('Caption:', caption);
+                console.log('Valid words found:', validWords);
+                console.log('Selected words:', selectedWords);
+                console.log('First digit:', firstDigit);
+                
+                // Формируем строку
+                let result = `("A=${authorFirstName}$")*("G=${year}$")`;
+                
+                // Добавляем K части, если есть данные
+                const kParts = [];
+                selectedWords.forEach(word => {
+                    kParts.push(`"K=${word}$"`);
+                });
+                
+                if (firstDigit) {
+                    kParts.push(`"K=${firstDigit}$"`);
+                }
+                
+                if (kParts.length > 0) {
+                    result += `*(${kParts.join('/()*')}/()*)`
+                }
+                
+                // Копируем в буфер обмена
+                navigator.clipboard.writeText(result).then(() => {
+                    // Показываем уведомление об успешном копировании
+                    this.showCopyNotification(result);
+                }).catch(err => {
+                    console.error('Ошибка копирования:', err);
+                    // Fallback для старых браузеров
+                    this.fallbackCopyToClipboard(result);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка при формировании строки:', error);
+                alert('Ошибка при копировании в буфер обмена');
+            }
+        },
+
+        fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                this.showCopyNotification(text);
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert('Не удалось скопировать в буфер обмена');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        },
+
+        showCopyNotification(copiedText) {
+            // Создаем временное уведомление
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 max-w-md';
+            notification.innerHTML = `<div class="break-words">Строка скопирована в буфер обмена: ${copiedText}</div>`;
+            document.body.appendChild(notification);
+            
+            // Удаляем уведомление через 3 секунды
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
         }
+    }
+}
     </script>
+    
     
     <style>
         .line-clamp-2 {

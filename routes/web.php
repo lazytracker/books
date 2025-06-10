@@ -14,6 +14,7 @@ use App\Http\Controllers\IrbisToMySqlSyncController;
 use App\Http\Controllers\SyncViewController; // Добавить этот импорт
 Route::post('/manual-order/update-database', [ManualOrderController::class, 'updateDatabase'])->name('manual-order.update-database');
 Route::get('/sync/debug-record', [IrbisToMySqlSyncController::class, 'debugRecord'])->name('sync.debug');
+Route::post('/manual-order/download-orders', [ManualOrderController::class, 'downloadOrders'])->name('manual-order.download-orders');
 
 
 // Маршрут для отображения страницы синхронизации
