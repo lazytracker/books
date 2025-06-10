@@ -721,17 +721,16 @@ public function upload(Request $request)
             $orderData = [
                 'ART' => trim($row[1] ?? ''),
                 'seqNum' => trim($row[2] ?? ''),
-                'type' => trim($row[3] ?? ''), // Добавляем колонку "Тип" из 4-й колонки Excel
                 'author' => trim($row[4] ?? ''),
                 'caption' => trim($row[5] ?? ''),
                 'year' => trim($row[6] ?? ''),
                 'quantity' => (int)($row[8] ?? 0),
                 'price' => $price,
                 'ordernum' => $orderNum,
-                'userid' => $userId,
+                'userid' => $userId, // Добавляем ID пользователя
                 'created_at' => $orderDate ?: now(),
                 'updated_at' => now(),
-            ];  
+            ];
 
             Log::info("Подготовленные данные: " . json_encode($orderData, JSON_UNESCAPED_UNICODE));
 
