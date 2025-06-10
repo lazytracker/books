@@ -163,141 +163,151 @@
         </div>
 
         <!-- Data Table -->
-        @if($orders->count() > 0)
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-900">
-                            Загруженные данные ({{ $orders->count() }} записей)
-                        </h2>
-                        <!-- Добавляем легенду для пользователя -->
-                        <p class="text-sm text-gray-600 mt-1">
-                            <span class="inline-block w-3 h-3 bg-green-200 rounded mr-2"></span>
-                            Строки с зелёным фоном соответствуют записям в основной базе данных
-                        </p>
-                    </div>
-                    @if($orderInfo)
-                    <div class="text-right">
-                        <p class="text-lg font-medium text-gray-900">
-                            Заказ {{ $orderInfo->ordernum }} от {{ $orderInfo->created_at ? $orderInfo->created_at->format('d.m.Y') : 'N/A' }}
-                        </p>
-                    </div>
-                    @endif
-                </div>
+@if($orders->count() > 0)
+<div class="bg-white shadow-sm rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900">
+                    Загруженные данные ({{ $orders->count() }} записей)
+                </h2>
+                <!-- Добавляем легенду для пользователя -->
+                <p class="text-sm text-gray-600 mt-1">
+                    <span class="inline-block w-3 h-3 bg-green-200 rounded mr-2"></span>
+                    Строки с зелёным фоном соответствуют записям в основной базе данных
+                </p>
             </div>
-            
-            <div class="overflow-auto custom-scrollbar" style="max-height: 70vh;">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 sticky top-0">
-                        <tr>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
-                                Артикул
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 90px;">
-                                Копировать
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
-                                Код ФП
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">
-                                Автор
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 300px;">
-                                Наименование
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
-                                Год
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
-                                Кол-во
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
-                                Цена, руб.
-                            </th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
-                                Действия
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($orders as $order)
-                            @php
-                                $isMatching = false;
-                                if (!empty($order->ART) && !empty($order->year)) {
-                                    $key = $order->ART . '_' . $order->year;
-                                    $isMatching = isset($matchingKeys[$key]);
-                                }
-                            @endphp
-                            <tr class="hover:bg-gray-50 {{ $isMatching ? 'matching-record' : '' }}">
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <div class="max-w-[100px] truncate" title="{{ $order->ART }}">
-                                        {{ $order->ART }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <button 
-                                        @click="copyArticleToClipboard('{{ $order->ART }}')"
-                                        class="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
-                                        title="Копировать артикул">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                        </svg>
-                                        Арт.
-                                    </button>
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <div class="max-w-[120px] truncate" title="{{ $order->seqNum }}">
-                                        {{ $order->seqNum }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-4 text-sm text-gray-900">
-                                    <div class="max-w-[200px] line-clamp-2" title="{{ $order->author }}">
-                                        {{ $order->author }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-4 text-sm text-gray-900">
-                                    <div class="max-w-[300px] line-clamp-3" title="{{ $order->caption }}">
-                                        {{ $order->caption }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $order->year }}
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                    {{ $order->quantity ?? '-' }}
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    {{ isset($order->price) ? number_format($order->price, 2, ',', ' ') : '-' }}
-                                </td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    @if(is_null($order->is_verified) || $order->is_verified == 0)
-                                        <button 
-                                            @click="copyToClipboard('{{ addslashes($order->author) }}', '{{ addslashes($order->caption) }}', '{{ $order->year }}')"
-                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
-                                            title="Копировать в буфер обмена">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                            </svg>
-                                            Копировать
-                                        </button>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            @if($orderInfo)
+            <div class="text-right">
+                <p class="text-lg font-medium text-gray-900">
+                    Заказ {{ $orderInfo->ordernum }} от {{ $orderInfo->created_at ? $orderInfo->created_at->format('d.m.Y') : 'N/A' }}
+                </p>
             </div>
+            @endif
         </div>
-        @else
-        <div class="bg-white shadow-sm rounded-lg p-8 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Нет загруженных данных</h3>
-            <p class="text-gray-500">Загрузите Excel файл для отображения данных заказа</p>
-        </div>
-        @endif
+    </div>
+    
+    <div class="overflow-auto custom-scrollbar" style="max-height: 70vh;">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+                <tr>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
+                        Артикул
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 90px;">
+                        Копировать
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                        Код ФП
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 200px;">
+                        Автор
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 300px;">
+                        Наименование
+                    </th>
+                    <!-- Добавляем новую колонку "Тип" -->
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                        Тип
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
+                        Год
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 80px;">
+                        Кол-во
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 100px;">
+                        Цена, руб.
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="min-width: 120px;">
+                        Действия
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach($orders as $order)
+                    @php
+                        $isMatching = false;
+                        if (!empty($order->ART) && !empty($order->year)) {
+                            $key = $order->ART . '_' . $order->year;
+                            $isMatching = isset($matchingKeys[$key]);
+                        }
+                    @endphp
+                    <tr class="hover:bg-gray-50 {{ $isMatching ? 'matching-record' : '' }}">
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="max-w-[100px] truncate" title="{{ $order->ART }}">
+                                {{ $order->ART }}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <button 
+                                @click="copyArticleToClipboard('{{ $order->ART }}')"
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                                title="Копировать артикул">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                Арт.
+                            </button>
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="max-w-[120px] truncate" title="{{ $order->seqNum }}">
+                                {{ $order->seqNum }}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 text-sm text-gray-900">
+                            <div class="max-w-[200px] line-clamp-2" title="{{ $order->author }}">
+                                {{ $order->author }}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 text-sm text-gray-900">
+                            <div class="max-w-[300px] line-clamp-3" title="{{ $order->caption }}">
+                                {{ $order->caption }}
+                            </div>
+                        </td>
+                        <!-- Добавляем ячейку для колонки "Тип" -->
+                        <td class="px-3 py-4 text-sm text-gray-900">
+                            <div class="max-w-[120px] line-clamp-2" title="{{ $order->type }}">
+                                {{ $order->type ?? '-' }}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $order->year }}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {{ $order->quantity ?? '-' }}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {{ isset($order->price) ? number_format($order->price, 2, ',', ' ') : '-' }}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if(is_null($order->is_verified) || $order->is_verified == 0)
+                                <button 
+                                    @click="copyToClipboard('{{ addslashes($order->author) }}', '{{ addslashes($order->caption) }}', '{{ $order->year }}')"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center gap-1"
+                                    title="Копировать в буфер обмена">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                    Копировать
+                                </button>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@else
+<div class="bg-white shadow-sm rounded-lg p-8 text-center">
+    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">Нет загруженных данных</h3>
+    <p class="text-gray-500">Загрузите Excel файл для отображения данных заказа</p>
+</div>
+@endif
     </div>
 
     <!-- Hidden forms for AJAX requests -->
