@@ -357,11 +357,7 @@ function manualOrder() {
             console.log('selectedUserId:', this.selectedUserId);
             console.log('selectedUserId type:', typeof this.selectedUserId);
             
-            // Исправляем проверку - учитываем и пустую строку
-            if (!this.selectedUserId || this.selectedUserId === '') {
-                alert('Пожалуйста, выберите пользователя перед загрузкой файла');
-                return;
-            }
+
 
             this.loading = true;
             
