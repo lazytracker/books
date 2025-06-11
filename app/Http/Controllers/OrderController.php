@@ -169,7 +169,7 @@ foreach ($orders as $row) {
         return response()->json(['message' => 'Download initiated.']);
     }
 
-    public function downloadOrder($userId, $orderNum)
+public function downloadOrder($userId, $orderNum)
     {
         // Fetch the grouped cart items
         $groupedCartItems = Order::with(['book', 'user'])->get()->groupBy('userid')->map(function ($orders) {
@@ -179,10 +179,10 @@ foreach ($orders as $row) {
                 'orders' => $orders->groupBy('ordernum')
             ];
         });
-    
+   
         // Get the specific order
         $order = $groupedCartItems[$userId]['orders'][$orderNum];
-    
+   
         // Prepare the content for the text file with book IDs
         $url_ids = Array();
         $finalContent = "";
@@ -192,21 +192,20 @@ foreach ($orders as $row) {
                 $orderDate = $cartItem->created_at->format('Ymd'); // дата в формате YYYYMMDD
                 $orderNum = $cartItem->ordernum;
                 $price = $cartItem->price;
-
-                $to_add = "#910: ^AU^1" . $booksNum 
-                        . "^DХР^D" . $orderDate 
-                        . "^E" . $price 
+                $to_add = "#910: ^AU^1" . $booksNum
+                        . "^DХР^D" . $orderDate
+                        . "^E" . $price
                         . "^Y" . $orderNum . "\r\n";
-
                 $fileContent = Storage::get(trim($url_id)) . "\r\n";
                 $finalContent .= $to_add . $fileContent;
             }
-
-        
-
+       
+        // Remove empty lines from final content
+        $finalContent = preg_replace('/^\s*\r?\n/m', '', $finalContent);
+       
         // Define the file name
         $fileName = 'order_' . $orderNum . '.txt';
-    
+   
         // Stream the content as a downloadable file
         return response()->stream(function () use ($finalContent) {
             echo $finalContent; // Output the content
