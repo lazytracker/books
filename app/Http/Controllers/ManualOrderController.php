@@ -360,68 +360,70 @@ public function downloadOrders()
     /**
      * Обработка отдельной записи
      */
-    private function processRecord($mfn)
+private function processRecord($mfn)
     {
         Log::info("Читаем запись MFN: {$mfn}");
-        
+       
         try {
             // Используем безопасное чтение записи
             $record = $this->safeReadRecord($mfn);
-            
+           
             if ($record === false) {
                 Log::warning("Не удалось прочитать запись MFN {$mfn}");
                 return false;
             }
-
             // Получаем поле 803 (внешний ID книги) с безопасной проверкой
             $field803 = $this->getFieldValue($record, 803);
             if (empty($field803)) {
                 Log::info("Поле 803 отсутствует в записи MFN {$mfn}");
                 return false;
             }
-
             $externalId = trim($field803);
             Log::info("Найден внешний ID: {$externalId}");
-
             // Проверяем корректность ID
             if (!is_numeric($externalId) || $externalId <= 0) {
                 Log::info("Некорректный внешний ID: {$externalId}");
                 return false;
             }
-
             // Ищем книгу в MySQL по внешнему ID
             $book = DB::table('books')->where('id', $externalId)->first();
-            
+           
             if (!$book) {
                 Log::info("Книга с ID {$externalId} не найдена в MySQL");
                 return false;
             }
-
             // Получаем поле 802 (артикул) с безопасной проверкой
             $field802 = $this->getFieldValue($record, 802);
             if (empty($field802)) {
                 Log::info("Поле 802 отсутствует в записи MFN {$mfn}");
                 return false;
             }
-
             $articleNumber = trim($field802);
             Log::info("Найден артикул: {$articleNumber}");
-
-            // Проверяем, нужно ли обновление
-            if ($book->ART === $articleNumber) {
-                Log::info("Артикул уже актуален для книги ID {$externalId}");
+            
+            // Получаем поле 2210 (год) с безопасной проверкой
+            $field2210 = $this->getFieldValue($record, 2210);
+            if (empty($field2210)) {
+                Log::info("Поле 2210 отсутствует в записи MFN {$mfn}");
                 return false;
             }
-
-            // Обновляем поле ART в таблице books
+            $year = trim($field2210);
+            Log::info("Найден год: {$year}");
+            
+            // Проверяем, нужно ли обновление
+            if ($book->ART === $articleNumber && $book->year === $year) {
+                Log::info("Артикул и год уже актуальны для книги ID {$externalId}");
+                return false;
+            }
+            // Обновляем поля ART и year в таблице books
             $updated = DB::table('books')
                 ->where('id', $externalId)
                 ->update([
                     'ART' => $articleNumber,
+                    'year' => $year,
                 ]);
-
             if ($updated) {
-                Log::info("Обновлена книга ID {$externalId}: ART = {$articleNumber}");
+                Log::info("Обновлена книга ID {$externalId}: ART = {$articleNumber}, year = {$year}");
                 return true;
             } else {
                 Log::warning("Не удалось обновить книгу ID {$externalId}");
