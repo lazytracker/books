@@ -108,12 +108,6 @@
                                         </span>
                                     </div>
                                     </h3>                            
-                                <style>
-                                    .approved-row {
-                                        background-color:rgb(44, 235, 156); /* светло-зелёный фон */
-                                    }
-                                </style>
-
                                 <table class="w-full mt-4">
                                     <thead>
                                         <tr>
