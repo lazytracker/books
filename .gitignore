@@ -22,3 +22,4 @@ yarn-error.log
 
 irbis_class.inc
 irbis_record_class.inc
+config/irbis.php

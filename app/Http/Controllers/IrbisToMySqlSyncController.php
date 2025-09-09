@@ -21,20 +21,18 @@ class IrbisToMySqlSyncController extends Controller
     public function syncNebToBooks(Request $request)
     {
         // Подключаем библиотеку ИРБИС
-        set_time_limit(0);
-        ini_set('memory_limit', '512M');
+        $this->initializeEnvironment();
         require_once base_path('irbis_class.inc');
-
-        // Настройки подключения к ИРБИС
-        $irbis_host = '127.0.0.1';
-        $irbis_port = 6666;
-        $irbis_login = '1';
-        $irbis_password = '1';
-        $irbis_database = 'NEB';
 
         try {
             // Подключение к базе ИРБИС
-            $this->irbis = new \irbis64($irbis_host, $irbis_port, $irbis_login, $irbis_password, $irbis_database);
+            $this->irbis = new \irbis64(
+                config('irbis.host'),
+                config('irbis.port'),
+                config('irbis.login'),
+                config('irbis.password'),
+                config('irbis.database')
+            );
 
             // Авторизация в ИРБИС
             if (!$this->irbis->login()) {
@@ -90,7 +88,7 @@ class IrbisToMySqlSyncController extends Controller
      */
     private function processIrbisRecords($max_mfn)
     {
-        $batch_size = 100;
+        $batch_size = config('irbis.batch_size', 100);
         
         for ($mfn = 1; $mfn <= $max_mfn; $mfn++) {
             try {
@@ -144,7 +142,8 @@ class IrbisToMySqlSyncController extends Controller
             // Проверяем код ошибки ИРБИС
             if ($this->irbis->error_code != 0) {
                 // Пропускаем удаленные или недоступные записи
-                if (in_array($this->irbis->error_code, [-603, -601, -140])) {
+                $ignoredCodes = config('irbis.ignored_error_codes', [-603, -601, -140]);
+                if (in_array($this->irbis->error_code, $ignoredCodes)) {
                     return false;
                 }
                 
@@ -303,6 +302,15 @@ class IrbisToMySqlSyncController extends Controller
     }
 
     /**
+     * Инициализация окружения
+     */
+    private function initializeEnvironment()
+    {
+        set_time_limit(config('irbis.time_limit', 0));
+        ini_set('memory_limit', config('irbis.memory_limit', '512M'));
+    }
+
+    /**
      * Тестовый метод для проверки подключения
      */
     public function testConnection()
@@ -310,7 +318,13 @@ class IrbisToMySqlSyncController extends Controller
         require_once base_path('irbis_class.inc');
         
         try {
-            $irbis = new \irbis64('127.0.0.1', 6666, '1', '1', 'NEB');
+            $irbis = new \irbis64(
+                config('irbis.host'),
+                config('irbis.port'),
+                config('irbis.login'),
+                config('irbis.password'),
+                config('irbis.database')
+            );
             
             if (!$irbis->login()) {
                 throw new \Exception("Ошибка подключения к ИРБИС: " . $irbis->error());
@@ -343,8 +357,8 @@ class IrbisToMySqlSyncController extends Controller
      */
     public function syncRange(Request $request)
     {
-        set_time_limit(0);
-        ini_set('memory_limit', '512M');
+        $this->initializeEnvironment();
+        
         $request->validate([
             'start_mfn' => 'required|integer|min:1',
             'end_mfn' => 'required|integer|min:1',
@@ -363,7 +377,13 @@ class IrbisToMySqlSyncController extends Controller
         require_once base_path('irbis_class.inc');
 
         try {
-            $this->irbis = new \irbis64('127.0.0.1', 6666, '1', '1', 'NEB');
+            $this->irbis = new \irbis64(
+                config('irbis.host'),
+                config('irbis.port'),
+                config('irbis.login'),
+                config('irbis.password'),
+                config('irbis.database')
+            );
 
             if (!$this->irbis->login()) {
                 throw new \Exception("Ошибка подключения к ИРБИС: " . $this->irbis->error());
@@ -440,7 +460,13 @@ class IrbisToMySqlSyncController extends Controller
         require_once base_path('irbis_class.inc');
         
         try {
-            $irbis = new \irbis64('127.0.0.1', 6666, '1', '1', 'NEB');
+            $irbis = new \irbis64(
+                config('irbis.host'),
+                config('irbis.port'),
+                config('irbis.login'),
+                config('irbis.password'),
+                config('irbis.database')
+            );
             
             if (!$irbis->login()) {
                 throw new \Exception("Ошибка подключения к ИРБИС: " . $irbis->error());
