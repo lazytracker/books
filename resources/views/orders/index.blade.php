@@ -66,7 +66,7 @@
         @csrf
         <input type="hidden" name="orderNum" value="{{ $orderNum }}">
 
-@if($items->first()->is_verified)
+@if(auth()->user()->user_verified_at !== null || $items->first()->is_verified)
     <a href="{{ route('order.download', [auth()->id(), $orderNum]) }}"
        style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none;">
         Скачать marc-записи
